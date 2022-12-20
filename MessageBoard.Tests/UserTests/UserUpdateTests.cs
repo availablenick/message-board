@@ -8,6 +8,7 @@ using System.Net.Http.Headers;
 
 using MessageBoard.Data;
 using MessageBoard.Models;
+using MessageBoard.Tests.Factories;
 
 namespace MessageBoard.Tests.UserTests;
 
@@ -38,7 +39,7 @@ public class UserUpdateTests : IClassFixture<CustomWebApplicationFactory<Program
         var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
         dbContext.Database.EnsureDeleted();
         dbContext.Database.Migrate();
-        var newUser = await CreateUser(dbContext);
+        var newUser = await UserFactory.CreateUser(dbContext);
 
         _client.DefaultRequestHeaders.Add("UserId", newUser.Id.ToString());
         var content = new FormUrlEncodedContent(new Dictionary<string, string>
@@ -66,7 +67,7 @@ public class UserUpdateTests : IClassFixture<CustomWebApplicationFactory<Program
         var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
         dbContext.Database.EnsureDeleted();
         dbContext.Database.Migrate();
-        var newUser = await CreateUser(dbContext);
+        var newUser = await UserFactory.CreateUser(dbContext);
 
         _client.DefaultRequestHeaders.Add("UserId", newUser.Id.ToString());
         var content = new FormUrlEncodedContent(new Dictionary<string, string>
@@ -86,13 +87,66 @@ public class UserUpdateTests : IClassFixture<CustomWebApplicationFactory<Program
     }
 
     [Fact]
+    public async Task UserCannotBeUpdatedWithExistingUsername()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
+        dbContext.Database.EnsureDeleted();
+        dbContext.Database.Migrate();
+        var user1 = await UserFactory.CreateUser(dbContext);
+        var user2 = await UserFactory.CreateUser(dbContext);
+
+        _client.DefaultRequestHeaders.Add("UserId", user1.Id.ToString());
+        var content = new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            { "_token", await GetCSRFToken(_client) },
+            { "username", user2.Username },
+            { "email", $"edit_{user1.Email}" },
+        });
+
+        var response = await _client.PutAsync($"/users/{user1.Id}", content);
+
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+        var userCount = await dbContext.Users.CountAsync(u => u.Username == user2.Username);
+        Assert.Equal(1, userCount);
+    }
+
+    [Fact]
+    public async Task UserCanBeUpdatedWithHisOwnUsername()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
+        dbContext.Database.EnsureDeleted();
+        dbContext.Database.Migrate();
+        var newUser = await UserFactory.CreateUser(dbContext);
+
+        _client.DefaultRequestHeaders.Add("UserId", newUser.Id.ToString());
+        var content = new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            { "_token", await GetCSRFToken(_client) },
+            { "username", newUser.Username },
+            { "email", $"edit_{newUser.Email}" },
+        });
+
+        var response = await _client.PutAsync($"/users/{newUser.Id}", content);
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        var userRecord = from u in dbContext.Users
+                        where u.Username == newUser.Username &&
+                            u.Email == $"edit_{newUser.Email}"
+                        select u;
+
+        Assert.NotNull(userRecord.FirstOrDefault());
+    }
+
+    [Fact]
     public async Task UserCannotBeUpdatedWithoutEmail()
     {
         using var scope = _factory.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
         dbContext.Database.EnsureDeleted();
         dbContext.Database.Migrate();
-        var newUser = await CreateUser(dbContext);
+        var newUser = await UserFactory.CreateUser(dbContext);
 
         _client.DefaultRequestHeaders.Add("UserId", newUser.Id.ToString());
         var content = new FormUrlEncodedContent(new Dictionary<string, string>
@@ -112,13 +166,66 @@ public class UserUpdateTests : IClassFixture<CustomWebApplicationFactory<Program
     }
 
     [Fact]
+    public async Task UserCannotBeUpdatedWithExistingEmail()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
+        dbContext.Database.EnsureDeleted();
+        dbContext.Database.Migrate();
+        var user1 = await UserFactory.CreateUser(dbContext);
+        var user2 = await UserFactory.CreateUser(dbContext);
+
+        _client.DefaultRequestHeaders.Add("UserId", user1.Id.ToString());
+        var content = new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            { "_token", await GetCSRFToken(_client) },
+            { "username", $"{user1.Username}_edit" },
+            { "email", user2.Email },
+        });
+
+        var response = await _client.PutAsync($"/users/{user1.Id}", content);
+
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+        var userCount = await dbContext.Users.CountAsync(u => u.Email == user2.Email);
+        Assert.Equal(1, userCount);
+    }
+
+    [Fact]
+    public async Task UserCanBeUpdatedWithHisOwnEmail()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
+        dbContext.Database.EnsureDeleted();
+        dbContext.Database.Migrate();
+        var newUser = await UserFactory.CreateUser(dbContext);
+
+        _client.DefaultRequestHeaders.Add("UserId", newUser.Id.ToString());
+        var content = new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            { "_token", await GetCSRFToken(_client) },
+            { "username", $"{newUser.Username}_edit" },
+            { "email", newUser.Email },
+        });
+
+        var response = await _client.PutAsync($"/users/{newUser.Id}", content);
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        var userRecord = from u in dbContext.Users
+                        where u.Username == $"{newUser.Username}_edit" &&
+                            u.Email == newUser.Email
+                        select u;
+
+        Assert.NotNull(userRecord.FirstOrDefault());
+    }
+
+    [Fact]
     public async Task UserCannotBeUpdatedByUnauthenticatedUser()
     {
         using var scope = _factory.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
         dbContext.Database.EnsureDeleted();
         dbContext.Database.Migrate();
-        var newUser = await CreateUser(dbContext);
+        var newUser = await UserFactory.CreateUser(dbContext);
 
         var content = new FormUrlEncodedContent(new Dictionary<string, string>
         {
@@ -145,8 +252,8 @@ public class UserUpdateTests : IClassFixture<CustomWebApplicationFactory<Program
         var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
         dbContext.Database.EnsureDeleted();
         dbContext.Database.Migrate();
-        var user1 = await CreateUser(dbContext);
-        var user2 = await CreateUser(dbContext);
+        var user1 = await UserFactory.CreateUser(dbContext);
+        var user2 = await UserFactory.CreateUser(dbContext);
 
         _client.DefaultRequestHeaders.Add("UserId", user2.Id.ToString());
         var content = new FormUrlEncodedContent(new Dictionary<string, string>
@@ -176,7 +283,7 @@ public class UserUpdateTests : IClassFixture<CustomWebApplicationFactory<Program
             var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
             dbContext.Database.EnsureDeleted();
             dbContext.Database.Migrate();
-            newUser = await CreateUser(dbContext);
+            newUser = await UserFactory.CreateUser(dbContext);
         }
 
         _client.DefaultRequestHeaders.Add("UserId", newUser.Id.ToString());
@@ -218,7 +325,7 @@ public class UserUpdateTests : IClassFixture<CustomWebApplicationFactory<Program
             var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
             dbContext.Database.EnsureDeleted();
             dbContext.Database.Migrate();
-            newUser = await CreateUser(dbContext);
+            newUser = await UserFactory.CreateUser(dbContext);
         }
 
         _client.DefaultRequestHeaders.Add("UserId", newUser.Id.ToString());
@@ -258,7 +365,7 @@ public class UserUpdateTests : IClassFixture<CustomWebApplicationFactory<Program
         var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
         dbContext.Database.EnsureDeleted();
         dbContext.Database.Migrate();
-        var newUser = await CreateUser(dbContext);
+        var newUser = await UserFactory.CreateUser(dbContext);
 
         _client.DefaultRequestHeaders.Add("UserId", newUser.Id.ToString());
         var csrfToken = await GetCSRFToken(_client);
@@ -291,7 +398,7 @@ public class UserUpdateTests : IClassFixture<CustomWebApplicationFactory<Program
         var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
         dbContext.Database.EnsureDeleted();
         dbContext.Database.Migrate();
-        var newUser = await CreateUser(dbContext);
+        var newUser = await UserFactory.CreateUser(dbContext);
 
         var content = new FormUrlEncodedContent(new Dictionary<string, string>
         {
@@ -318,7 +425,7 @@ public class UserUpdateTests : IClassFixture<CustomWebApplicationFactory<Program
         var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
         dbContext.Database.EnsureDeleted();
         dbContext.Database.Migrate();
-        var newUser = await CreateUser(dbContext);
+        var newUser = await UserFactory.CreateUser(dbContext);
 
         _client.DefaultRequestHeaders.Add("UserId", newUser.Id.ToString());
         var content = new FormUrlEncodedContent(new Dictionary<string, string>
@@ -347,20 +454,5 @@ public class UserUpdateTests : IClassFixture<CustomWebApplicationFactory<Program
             .Single(c => c.StartsWith("XSRF-TOKEN"))
             .Substring("XSRF-TOKEN=".Length)
             .Split(';')[0];
-    }
-
-    private async Task<User> CreateUser(MessageBoardDbContext dbContext)
-    {
-        var user = new User
-        {
-            Username = "test_user",
-            Email = "test@test.com",
-            PasswordHash = "AQAAAAEAACcQAAAAEN0ui+14r0IDonYriVB5PTVPK7aW9VqXJGeQsBkEcmXFPTbOR5vFrMtyy1LTOAwWXg==",
-        };
-
-        await dbContext.Users.AddAsync(user);
-        await dbContext.SaveChangesAsync();
-
-        return user;
     }
 }

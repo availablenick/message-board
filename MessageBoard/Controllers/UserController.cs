@@ -1,7 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
+
+using System.ComponentModel.DataAnnotations;
 
 using MessageBoard.Data;
 using MessageBoard.Models;
@@ -14,6 +17,8 @@ public class UserController : Controller
     public class UserCreationDTO
     {
         public string Username { get; set; }
+
+        [EmailAddress]
         public string Email { get; set; }
         public string Password { get; set; }
         public IFormFile? Avatar { get; set; }
@@ -43,23 +48,18 @@ public class UserController : Controller
             return Redirect("/");
         }
 
-        if (!ModelState.IsValid)
+        if (!DataIsValid(userDTO.Username, userDTO.Email, userDTO.Avatar))
         {
             return UnprocessableEntity();
         }
 
-        if (!FileIsValid(userDTO.Avatar))
-        {
-            return UnprocessableEntity();
-        }
-
-        var user = CreateUser(userDTO);
+        var newUser = CreateUser(userDTO);
         if (userDTO.Avatar != null)
         {
-            user.Avatar = await StoreFile(userDTO.Avatar);
+            newUser.Avatar = await StoreFile(userDTO.Avatar);
         }
 
-        await _context.Users.AddAsync(user);
+        await _context.Users.AddAsync(newUser);
         await _context.SaveChangesAsync();
         return NoContent();
     }
@@ -77,16 +77,12 @@ public class UserController : Controller
         }
 
         var user = await _context.Users.FindAsync(id);
-        if (user == null) {
+        if (user == null)
+        {
             return NotFound();
         }
 
-        if (!ModelState.IsValid)
-        {
-            return UnprocessableEntity();
-        }
-
-        if (!FileIsValid(userDTO.Avatar))
+        if (!DataIsValid(userDTO.Username, userDTO.Email, userDTO.Avatar, id))
         {
             return UnprocessableEntity();
         }
@@ -101,6 +97,39 @@ public class UserController : Controller
         _context.Users.Update(user);
         await _context.SaveChangesAsync();
         return NoContent();
+    }
+
+    private bool DataIsValid(string username, string email, IFormFile? avatar, int? id = null)
+    {
+        if (!ModelState.IsValid)
+        {
+            return false;
+        }
+
+        var user = _context.Users.Where(u => u.Username == username).FirstOrDefault();
+        if (user != null)
+        {
+            if (id == null || id != user.Id)
+            {
+                return false;
+            }
+        }
+
+        user = _context.Users.Where(u => u.Email == email).FirstOrDefault();
+        if (user != null)
+        {
+            if (id == null || id != user.Id)
+            {
+                return false;
+            }
+        }
+
+        if (!FileIsValid(avatar))
+        {
+            return false;
+        }
+
+        return true;
     }
 
     private bool FileIsValid(IFormFile file)

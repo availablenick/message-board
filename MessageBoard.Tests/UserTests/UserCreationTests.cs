@@ -7,6 +7,7 @@ using System.Net.Http.Headers;
 
 using MessageBoard.Data;
 using MessageBoard.Models;
+using MessageBoard.Tests.Factories;
 
 namespace MessageBoard.Tests.UserTests;
 
@@ -79,6 +80,28 @@ public class UserCreationTests : IClassFixture<CustomWebApplicationFactory<Progr
     }
 
     [Fact]
+    public async Task UserCannotBeCreatedWithExistingUsername()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
+        dbContext.Database.EnsureDeleted();
+        dbContext.Database.Migrate();
+        var newUser = await UserFactory.CreateUser(dbContext);
+
+        var content = new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            { "username", newUser.Username },
+            { "email", $"2{newUser.Email}" },
+            { "password", "test_password" },
+        });
+
+        var response = await _client.PostAsync("/users", content);
+
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+        Assert.Equal(1, await dbContext.Users.CountAsync());
+    }
+
+    [Fact]
     public async Task UserCannotBeCreatedWithoutEmail()
     {
         using var scope = _factory.Services.CreateScope();
@@ -96,6 +119,49 @@ public class UserCreationTests : IClassFixture<CustomWebApplicationFactory<Progr
 
         Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
         Assert.Equal(0, await dbContext.Users.CountAsync());
+    }
+
+    [Fact]
+    public async Task UserCannotBeCreatedWithInvalidEmail()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
+        dbContext.Database.EnsureDeleted();
+        dbContext.Database.Migrate();
+
+        var content = new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            { "username", "test_username" },
+            { "email", "test_email" },
+            { "password", "test_password" },
+        });
+
+        var response = await _client.PostAsync("/users", content);
+
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+        Assert.Equal(0, await dbContext.Users.CountAsync());
+    }
+
+    [Fact]
+    public async Task UserCannotBeCreatedWithExistingEmail()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
+        dbContext.Database.EnsureDeleted();
+        dbContext.Database.Migrate();
+        var newUser = await UserFactory.CreateUser(dbContext);
+
+        var content = new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            { "username", $"{newUser.Username}2" },
+            { "email", newUser.Email },
+            { "password", "test_password" },
+        });
+
+        var response = await _client.PostAsync("/users", content);
+
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+        Assert.Equal(1, await dbContext.Users.CountAsync());
     }
 
     [Fact]
@@ -144,11 +210,10 @@ public class UserCreationTests : IClassFixture<CustomWebApplicationFactory<Progr
         multipartFormDataContent.Add(new StringContent("test_password"), "password");
 
         HttpResponseMessage response;
-        string filename = "test_file.jpg";
         using (var streamContent = new StreamContent(new MemoryStream()))
         {
             streamContent.Headers.ContentType = new MediaTypeHeaderValue("image/jpeg");
-            multipartFormDataContent.Add(streamContent, "avatar", filename);
+            multipartFormDataContent.Add(streamContent, "avatar", "test_file.jpg");
             response = await _client.PostAsync("/users", multipartFormDataContent);
         }
 
@@ -178,11 +243,10 @@ public class UserCreationTests : IClassFixture<CustomWebApplicationFactory<Progr
         multipartFormDataContent.Add(new StringContent("test_password"), "password");
 
         HttpResponseMessage response;
-        string filename = "test_file.png";
         using (var streamContent = new StreamContent(new MemoryStream()))
         {
             streamContent.Headers.ContentType = new MediaTypeHeaderValue("image/png");
-            multipartFormDataContent.Add(streamContent, "avatar", filename);
+            multipartFormDataContent.Add(streamContent, "avatar", "test_file.png");
             response = await _client.PostAsync("/users", multipartFormDataContent);
         }
 
@@ -212,11 +276,10 @@ public class UserCreationTests : IClassFixture<CustomWebApplicationFactory<Progr
         multipartFormDataContent.Add(new StringContent("test_password"), "password");
 
         HttpResponseMessage response;
-        string filename = "test_file.txt";
         using (var streamContent = new StreamContent(new MemoryStream()))
         {
             streamContent.Headers.ContentType = new MediaTypeHeaderValue("text/plain");
-            multipartFormDataContent.Add(streamContent, "avatar", filename);
+            multipartFormDataContent.Add(streamContent, "avatar", "test_file.txt");
             response = await _client.PostAsync("/users", multipartFormDataContent);
         }
 
