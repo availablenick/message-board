@@ -1,0 +1,366 @@
+using Microsoft.AspNetCore.Antiforgery;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using System.Net;
+using System.Net.Http.Headers;
+
+using MessageBoard.Data;
+using MessageBoard.Models;
+
+namespace MessageBoard.Tests.UserTests;
+
+[Collection("User")]
+public class UserUpdateTests : IClassFixture<CustomWebApplicationFactory<Program>>
+{
+    private readonly string _mainProjectPath;
+    private readonly CustomWebApplicationFactory<Program> _factory;
+    private readonly HttpClient _client;
+
+    public UserUpdateTests(CustomWebApplicationFactory<Program> factory)
+    {
+        _mainProjectPath = $"{Directory.GetParent(Directory.GetCurrentDirectory()).Parent.Parent.Parent.FullName}/MessageBoard/";
+        _factory = factory;
+        _client = factory.CreateClient(new WebApplicationFactoryClientOptions
+        {
+            AllowAutoRedirect = false,
+        });
+
+        _client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Test");
+    }
+
+    [Fact]
+    public async Task UserCanBeUpdated()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
+        dbContext.Database.EnsureDeleted();
+        dbContext.Database.Migrate();
+        var newUser = await CreateUser(dbContext);
+
+        _client.DefaultRequestHeaders.Add("UserId", newUser.Id.ToString());
+        var content = new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            { "_token", await GetCSRFToken(_client) },
+            { "username", $"{newUser.Username}_edit" },
+            { "email", $"edit_{newUser.Email}" },
+        });
+
+        var response = await _client.PutAsync($"/users/{newUser.Id}", content);
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        var userRecord = from u in dbContext.Users
+                        where u.Username == $"{newUser.Username}_edit" &&
+                                u.Email == $"edit_{newUser.Email}"
+                        select u;
+
+        Assert.NotNull(userRecord.FirstOrDefault());
+    }
+
+    [Fact]
+    public async Task UserCannotBeUpdatedWithoutUsername()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
+        dbContext.Database.EnsureDeleted();
+        dbContext.Database.Migrate();
+        var newUser = await CreateUser(dbContext);
+
+        _client.DefaultRequestHeaders.Add("UserId", newUser.Id.ToString());
+        var content = new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            { "_token", await GetCSRFToken(_client) },
+            { "email", $"edit_{newUser.Email}" },
+        });
+
+        var response = await _client.PutAsync($"/users/{newUser.Id}", content);
+
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+        var userRecord = from u in dbContext.Users
+                        where u.Email == $"edit_{newUser.Email}"
+                        select u;
+
+        Assert.Null(userRecord.FirstOrDefault());
+    }
+
+    [Fact]
+    public async Task UserCannotBeUpdatedWithoutEmail()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
+        dbContext.Database.EnsureDeleted();
+        dbContext.Database.Migrate();
+        var newUser = await CreateUser(dbContext);
+
+        _client.DefaultRequestHeaders.Add("UserId", newUser.Id.ToString());
+        var content = new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            { "_token", await GetCSRFToken(_client) },
+            { "username", $"{newUser.Username}_edit" },
+        });
+
+        var response = await _client.PutAsync($"/users/{newUser.Id}", content);
+
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+        var userRecord = from u in dbContext.Users
+                        where u.Username == $"{newUser.Username}_edit"
+                        select u;
+
+        Assert.Null(userRecord.FirstOrDefault());
+    }
+
+    [Fact]
+    public async Task UserCannotBeUpdatedByUnauthenticatedUser()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
+        dbContext.Database.EnsureDeleted();
+        dbContext.Database.Migrate();
+        var newUser = await CreateUser(dbContext);
+
+        var content = new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            { "username", $"{newUser.Username}_edit" },
+            { "email", $"edit_{newUser.Email}" },
+        });
+
+        _client.DefaultRequestHeaders.Remove("Authorization");
+        var response = await _client.PutAsync($"/users/{newUser.Id}", content);
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        var userRecord = from u in dbContext.Users
+                        where u.Username == $"{newUser.Username}_edit" &&
+                                u.Email == $"edit_{newUser.Email}"
+                        select u;
+
+        Assert.Null(userRecord.FirstOrDefault());
+    }
+
+    [Fact]
+    public async Task UserCannotBeUpdatedByAnyoneOtherThanThemselves()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
+        dbContext.Database.EnsureDeleted();
+        dbContext.Database.Migrate();
+        var user1 = await CreateUser(dbContext);
+        var user2 = await CreateUser(dbContext);
+
+        _client.DefaultRequestHeaders.Add("UserId", user2.Id.ToString());
+        var content = new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            { "_token", await GetCSRFToken(_client) },
+            { "username", $"{user1.Username}_edit" },
+            { "email", $"edit_{user1.Email}" },
+        });
+
+        var response = await _client.PutAsync($"/users/{user1.Id}", content);
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        var userRecord = from u in dbContext.Users
+                        where u.Username == $"{user1.Username}_edit" &&
+                                u.Email == $"edit_{user1.Email}"
+                        select u;
+
+        Assert.Null(userRecord.FirstOrDefault());
+    }
+
+    [Fact]
+    public async Task UserCanBeUpdatedWithJPEGAvatar()
+    {
+        User newUser;
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
+            dbContext.Database.EnsureDeleted();
+            dbContext.Database.Migrate();
+            newUser = await CreateUser(dbContext);
+        }
+
+        _client.DefaultRequestHeaders.Add("UserId", newUser.Id.ToString());
+        var csrfToken = await GetCSRFToken(_client);
+        var content = new MultipartFormDataContent();
+        content.Add(new StringContent(csrfToken), "_token");
+        content.Add(new StringContent($"{newUser.Username}_edit"), "username");
+        content.Add(new StringContent($"edit_{newUser.Email}"), "email");
+        HttpResponseMessage response;
+        using (var streamContent = new StreamContent(new MemoryStream()))
+        {
+            streamContent.Headers.ContentType = new MediaTypeHeaderValue("image/jpeg");
+            content.Add(streamContent, "avatar", "test_file.jpg");
+            response = await _client.PutAsync($"/users/{newUser.Id}", content);
+        }
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
+            var userRecord = from u in dbContext.Users
+                            where u.Username == $"{newUser.Username}_edit" &&
+                                    u.Email == $"edit_{newUser.Email}"
+                            select u;
+
+            var user = userRecord.FirstOrDefault();
+            Assert.NotNull(user);
+            string avatarPath = $"{_mainProjectPath}{user.Avatar}";
+            Assert.True(File.Exists(avatarPath));
+        }
+    }
+
+    [Fact]
+    public async Task UserCanBeCreatedWithPNGAvatar()
+    {
+        User newUser;
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
+            dbContext.Database.EnsureDeleted();
+            dbContext.Database.Migrate();
+            newUser = await CreateUser(dbContext);
+        }
+
+        _client.DefaultRequestHeaders.Add("UserId", newUser.Id.ToString());
+        var csrfToken = await GetCSRFToken(_client);
+        var content = new MultipartFormDataContent();
+        content.Add(new StringContent(csrfToken), "_token");
+        content.Add(new StringContent($"{newUser.Username}_edit"), "username");
+        content.Add(new StringContent($"edit_{newUser.Email}"), "email");
+        HttpResponseMessage response;
+        using (var streamContent = new StreamContent(new MemoryStream()))
+        {
+            streamContent.Headers.ContentType = new MediaTypeHeaderValue("image/png");
+            content.Add(streamContent, "avatar", "test_file.png");
+            response = await _client.PutAsync($"/users/{newUser.Id}", content);
+        }
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
+            var userRecord = from u in dbContext.Users
+                            where u.Username == $"{newUser.Username}_edit" &&
+                                    u.Email == $"edit_{newUser.Email}"
+                            select u;
+
+            var user = userRecord.FirstOrDefault();
+            Assert.NotNull(user);
+            string avatarPath = $"{_mainProjectPath}{user.Avatar}";
+            Assert.True(File.Exists(avatarPath));
+        }
+    }
+
+    [Fact]
+    public async Task UserCannotBeCreatedWithAvatarOfWrongMIMEType()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
+        dbContext.Database.EnsureDeleted();
+        dbContext.Database.Migrate();
+        var newUser = await CreateUser(dbContext);
+
+        _client.DefaultRequestHeaders.Add("UserId", newUser.Id.ToString());
+        var csrfToken = await GetCSRFToken(_client);
+        var content = new MultipartFormDataContent();
+        content.Add(new StringContent(csrfToken), "_token");
+        content.Add(new StringContent($"{newUser.Username}_edit"), "username");
+        content.Add(new StringContent($"edit_{newUser.Email}"), "email");
+        HttpResponseMessage response;
+        using (var streamContent = new StreamContent(new MemoryStream()))
+        {
+            streamContent.Headers.ContentType = new MediaTypeHeaderValue("text/plain");
+            content.Add(streamContent, "avatar", "test_file.txt");
+            response = await _client.PutAsync($"/users/{newUser.Id}", content);
+        }
+
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+        var userRecord = from u in dbContext.Users
+                        where u.Username == $"{newUser.Username}_edit" &&
+                                u.Email == $"edit_{newUser.Email}"
+                        select u;
+
+        var user = userRecord.FirstOrDefault();
+        Assert.Null(user);
+    }
+
+    [Fact]
+    public async Task CSRFProtectionIsActive()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
+        dbContext.Database.EnsureDeleted();
+        dbContext.Database.Migrate();
+        var newUser = await CreateUser(dbContext);
+
+        var content = new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            { "username", $"{newUser.Username}_edit" },
+            { "email", $"edit_{newUser.Email}" },
+        });
+
+        _client.DefaultRequestHeaders.Add("UserId", newUser.Id.ToString());
+        var response = await _client.PutAsync($"/users/{newUser.Id}", content);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        var userRecord = from u in dbContext.Users
+                        where u.Username == $"{newUser.Username}_edit" &&
+                                u.Email == $"edit_{newUser.Email}"
+                        select u;
+
+        Assert.Null(userRecord.FirstOrDefault());
+    }
+
+    [Fact]
+    public async Task HTTPMethodOverrideCanBeUsed()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
+        dbContext.Database.EnsureDeleted();
+        dbContext.Database.Migrate();
+        var newUser = await CreateUser(dbContext);
+
+        _client.DefaultRequestHeaders.Add("UserId", newUser.Id.ToString());
+        var content = new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            { "_method", "PUT" },
+            { "_token", await GetCSRFToken(_client) },
+            { "username", $"{newUser.Username}_edit" },
+            { "email", $"edit_{newUser.Email}" },
+        });
+
+        var response = await _client.PostAsync($"/users/{newUser.Id}", content);
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        var userRecord = from u in dbContext.Users
+                        where u.Username == $"{newUser.Username}_edit" &&
+                                u.Email == $"edit_{newUser.Email}"
+                        select u;
+
+        Assert.NotNull(userRecord.FirstOrDefault());
+    }
+
+    private async Task<string> GetCSRFToken(HttpClient client)
+    {
+        var response = await _client.GetAsync("/csrf-token");
+        return response.Headers.GetValues("Set-Cookie")
+            .Single(c => c.StartsWith("XSRF-TOKEN"))
+            .Substring("XSRF-TOKEN=".Length)
+            .Split(';')[0];
+    }
+
+    private async Task<User> CreateUser(MessageBoardDbContext dbContext)
+    {
+        var user = new User
+        {
+            Username = "test_user",
+            Email = "test@test.com",
+            PasswordHash = "AQAAAAEAACcQAAAAEN0ui+14r0IDonYriVB5PTVPK7aW9VqXJGeQsBkEcmXFPTbOR5vFrMtyy1LTOAwWXg==",
+        };
+
+        await dbContext.Users.AddAsync(user);
+        await dbContext.SaveChangesAsync();
+
+        return user;
+    }
+}

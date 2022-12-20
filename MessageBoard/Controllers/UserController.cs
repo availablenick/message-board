@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using System.Diagnostics;
 using System.Security.Claims;
 
 using MessageBoard.Data;
@@ -12,11 +11,18 @@ namespace MessageBoard.Controllers;
 [Route("users")]
 public class UserController : Controller
 {
-    public class UserDTO
+    public class UserCreationDTO
     {
         public string Username { get; set; }
         public string Email { get; set; }
         public string Password { get; set; }
+        public IFormFile? Avatar { get; set; }
+    }
+
+    public class UserUpdateDTO
+    {
+        public string Username { get; set; }
+        public string Email { get; set; }
         public IFormFile? Avatar { get; set; }
     }
 
@@ -30,7 +36,7 @@ public class UserController : Controller
     }
 
     [HttpPost]
-    public async Task<IActionResult> Create(UserDTO userDTO)
+    public async Task<IActionResult> Create(UserCreationDTO userDTO)
     {
         if (User.Identity.IsAuthenticated)
         {
@@ -54,6 +60,45 @@ public class UserController : Controller
         }
 
         await _context.Users.AddAsync(user);
+        await _context.SaveChangesAsync();
+        return NoContent();
+    }
+
+    [HttpPut]
+    [Route("{id}")]
+    [Authorize]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Update(int id, UserUpdateDTO userDTO)
+    {
+        var userIdClaim = User.FindFirst(claim => claim.Type == ClaimTypes.NameIdentifier);
+        if (userIdClaim == null || Convert.ToInt32(userIdClaim.Value) != id)
+        {
+            return Forbid();
+        }
+
+        var user = await _context.Users.FindAsync(id);
+        if (user == null) {
+            return NotFound();
+        }
+
+        if (!ModelState.IsValid)
+        {
+            return UnprocessableEntity();
+        }
+
+        if (!FileIsValid(userDTO.Avatar))
+        {
+            return UnprocessableEntity();
+        }
+
+        user.Username = userDTO.Username;
+        user.Email = userDTO.Email;
+        if (userDTO.Avatar != null)
+        {
+            user.Avatar = await StoreFile(userDTO.Avatar);
+        }
+
+        _context.Users.Update(user);
         await _context.SaveChangesAsync();
         return NoContent();
     }
@@ -94,7 +139,7 @@ public class UserController : Controller
         return fileSubpath;
     }
 
-    private User CreateUser(UserDTO userDTO)
+    private User CreateUser(UserCreationDTO userDTO)
     {
         var passwordHasher = new PasswordHasher<User>();
         var user = new User { Username = userDTO.Username, Email = userDTO.Email };

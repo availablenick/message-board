@@ -1,8 +1,5 @@
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using System.Net;
@@ -13,6 +10,7 @@ using MessageBoard.Models;
 
 namespace MessageBoard.Tests.UserTests;
 
+[Collection("User")]
 public class UserCreationTests : IClassFixture<CustomWebApplicationFactory<Program>>
 {
     private readonly string _mainProjectPath;
@@ -123,21 +121,10 @@ public class UserCreationTests : IClassFixture<CustomWebApplicationFactory<Progr
     [Fact]
     public async Task UserCannotBeCreatedByAuthenticatedUser()
     {
-        var client = _factory.WithWebHostBuilder(builder =>
-            {
-                builder.ConfigureTestServices(services =>
-                {
-                    services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
-                        .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>(
-                            CookieAuthenticationDefaults.AuthenticationScheme, options => { });
-                });
-            })
-            .CreateClient(new WebApplicationFactoryClientOptions
-            {
-                AllowAutoRedirect = false,
-            });
+        _client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Test");
 
-        var response = await client.PostAsync("/users", null);
+        var response = await _client.PostAsync("/users", null);
 
         Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
         Assert.Equal("/", response.Headers.Location.OriginalString);

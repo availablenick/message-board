@@ -15,11 +15,20 @@ public class TestAuthHandler : AuthenticationHandler<AuthenticationSchemeOptions
 
     protected override Task<AuthenticateResult> HandleAuthenticateAsync()
     {
-        var claims = new Claim[] { };
-        var identity = new ClaimsIdentity(claims, "Test");
-        var principal = new ClaimsPrincipal(identity);
-        var ticket = new AuthenticationTicket(principal, CookieAuthenticationDefaults.AuthenticationScheme);
-        var result = AuthenticateResult.Success(ticket);
-        return Task.FromResult(result);
+        if (Request.Headers.ContainsKey("Authorization"))
+        {
+            List<Claim> claims = new List<Claim>();
+            if (Request.Headers.ContainsKey("UserId"))
+            {
+                claims.Add(new Claim(ClaimTypes.NameIdentifier, Request.Headers["UserId"]));
+            }
+
+            var identity = new ClaimsIdentity(claims, "Test");
+            var principal = new ClaimsPrincipal(identity);
+            var ticket = new AuthenticationTicket(principal, CookieAuthenticationDefaults.AuthenticationScheme);
+            return Task.FromResult(AuthenticateResult.Success(ticket));
+        }
+
+        return Task.FromResult(AuthenticateResult.Fail(""));
     }
 }
