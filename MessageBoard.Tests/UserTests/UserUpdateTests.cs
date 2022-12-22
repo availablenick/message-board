@@ -44,7 +44,7 @@ public class UserUpdateTests : IClassFixture<CustomWebApplicationFactory<Program
         _client.DefaultRequestHeaders.Add("UserId", newUser.Id.ToString());
         var content = new FormUrlEncodedContent(new Dictionary<string, string>
         {
-            { "_token", await GetCSRFToken(_client) },
+            { "_token", await Utilities.GetCSRFToken(_client) },
             { "username", $"{newUser.Username}_edit" },
             { "email", $"edit_{newUser.Email}" },
         });
@@ -72,7 +72,7 @@ public class UserUpdateTests : IClassFixture<CustomWebApplicationFactory<Program
         _client.DefaultRequestHeaders.Add("UserId", newUser.Id.ToString());
         var content = new FormUrlEncodedContent(new Dictionary<string, string>
         {
-            { "_token", await GetCSRFToken(_client) },
+            { "_token", await Utilities.GetCSRFToken(_client) },
             { "email", $"edit_{newUser.Email}" },
         });
 
@@ -99,7 +99,7 @@ public class UserUpdateTests : IClassFixture<CustomWebApplicationFactory<Program
         _client.DefaultRequestHeaders.Add("UserId", user1.Id.ToString());
         var content = new FormUrlEncodedContent(new Dictionary<string, string>
         {
-            { "_token", await GetCSRFToken(_client) },
+            { "_token", await Utilities.GetCSRFToken(_client) },
             { "username", user2.Username },
             { "email", $"edit_{user1.Email}" },
         });
@@ -123,7 +123,7 @@ public class UserUpdateTests : IClassFixture<CustomWebApplicationFactory<Program
         _client.DefaultRequestHeaders.Add("UserId", newUser.Id.ToString());
         var content = new FormUrlEncodedContent(new Dictionary<string, string>
         {
-            { "_token", await GetCSRFToken(_client) },
+            { "_token", await Utilities.GetCSRFToken(_client) },
             { "username", newUser.Username },
             { "email", $"edit_{newUser.Email}" },
         });
@@ -151,7 +151,7 @@ public class UserUpdateTests : IClassFixture<CustomWebApplicationFactory<Program
         _client.DefaultRequestHeaders.Add("UserId", newUser.Id.ToString());
         var content = new FormUrlEncodedContent(new Dictionary<string, string>
         {
-            { "_token", await GetCSRFToken(_client) },
+            { "_token", await Utilities.GetCSRFToken(_client) },
             { "username", $"{newUser.Username}_edit" },
         });
 
@@ -178,7 +178,7 @@ public class UserUpdateTests : IClassFixture<CustomWebApplicationFactory<Program
         _client.DefaultRequestHeaders.Add("UserId", user1.Id.ToString());
         var content = new FormUrlEncodedContent(new Dictionary<string, string>
         {
-            { "_token", await GetCSRFToken(_client) },
+            { "_token", await Utilities.GetCSRFToken(_client) },
             { "username", $"{user1.Username}_edit" },
             { "email", user2.Email },
         });
@@ -202,7 +202,7 @@ public class UserUpdateTests : IClassFixture<CustomWebApplicationFactory<Program
         _client.DefaultRequestHeaders.Add("UserId", newUser.Id.ToString());
         var content = new FormUrlEncodedContent(new Dictionary<string, string>
         {
-            { "_token", await GetCSRFToken(_client) },
+            { "_token", await Utilities.GetCSRFToken(_client) },
             { "username", $"{newUser.Username}_edit" },
             { "email", newUser.Email },
         });
@@ -258,7 +258,7 @@ public class UserUpdateTests : IClassFixture<CustomWebApplicationFactory<Program
         _client.DefaultRequestHeaders.Add("UserId", user2.Id.ToString());
         var content = new FormUrlEncodedContent(new Dictionary<string, string>
         {
-            { "_token", await GetCSRFToken(_client) },
+            { "_token", await Utilities.GetCSRFToken(_client) },
             { "username", $"{user1.Username}_edit" },
             { "email", $"edit_{user1.Email}" },
         });
@@ -287,7 +287,7 @@ public class UserUpdateTests : IClassFixture<CustomWebApplicationFactory<Program
         }
 
         _client.DefaultRequestHeaders.Add("UserId", newUser.Id.ToString());
-        var csrfToken = await GetCSRFToken(_client);
+        var csrfToken = await Utilities.GetCSRFToken(_client);
         var content = new MultipartFormDataContent();
         content.Add(new StringContent(csrfToken), "_token");
         content.Add(new StringContent($"{newUser.Username}_edit"), "username");
@@ -329,7 +329,7 @@ public class UserUpdateTests : IClassFixture<CustomWebApplicationFactory<Program
         }
 
         _client.DefaultRequestHeaders.Add("UserId", newUser.Id.ToString());
-        var csrfToken = await GetCSRFToken(_client);
+        var csrfToken = await Utilities.GetCSRFToken(_client);
         var content = new MultipartFormDataContent();
         content.Add(new StringContent(csrfToken), "_token");
         content.Add(new StringContent($"{newUser.Username}_edit"), "username");
@@ -368,7 +368,7 @@ public class UserUpdateTests : IClassFixture<CustomWebApplicationFactory<Program
         var newUser = await UserFactory.CreateUser(dbContext);
 
         _client.DefaultRequestHeaders.Add("UserId", newUser.Id.ToString());
-        var csrfToken = await GetCSRFToken(_client);
+        var csrfToken = await Utilities.GetCSRFToken(_client);
         var content = new MultipartFormDataContent();
         content.Add(new StringContent(csrfToken), "_token");
         content.Add(new StringContent($"{newUser.Username}_edit"), "username");
@@ -431,7 +431,7 @@ public class UserUpdateTests : IClassFixture<CustomWebApplicationFactory<Program
         var content = new FormUrlEncodedContent(new Dictionary<string, string>
         {
             { "_method", "PUT" },
-            { "_token", await GetCSRFToken(_client) },
+            { "_token", await Utilities.GetCSRFToken(_client) },
             { "username", $"{newUser.Username}_edit" },
             { "email", $"edit_{newUser.Email}" },
         });
@@ -445,14 +445,5 @@ public class UserUpdateTests : IClassFixture<CustomWebApplicationFactory<Program
                         select u;
 
         Assert.NotNull(userRecord.FirstOrDefault());
-    }
-
-    private async Task<string> GetCSRFToken(HttpClient client)
-    {
-        var response = await _client.GetAsync("/csrf-token");
-        return response.Headers.GetValues("Set-Cookie")
-            .Single(c => c.StartsWith("XSRF-TOKEN"))
-            .Substring("XSRF-TOKEN=".Length)
-            .Split(';')[0];
     }
 }

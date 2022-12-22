@@ -70,8 +70,7 @@ public class UserController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Update(int id, UserUpdateDTO userDTO)
     {
-        var userIdClaim = User.FindFirst(claim => claim.Type == ClaimTypes.NameIdentifier);
-        if (userIdClaim == null || Convert.ToInt32(userIdClaim.Value) != id)
+        if (!ActionIsAllowed(id))
         {
             return Forbid();
         }
@@ -97,6 +96,35 @@ public class UserController : Controller
         _context.Users.Update(user);
         await _context.SaveChangesAsync();
         return NoContent();
+    }
+
+    [HttpDelete]
+    [Route("{id}")]
+    [Authorize]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Delete(int id)
+    {
+        if (!ActionIsAllowed(id))
+        {
+            return Forbid();
+        }
+
+        var user = await _context.Users.FindAsync(id);
+        user.IsDeleted = true;
+        _context.Users.Update(user);
+        await _context.SaveChangesAsync();
+        return NoContent();
+    }
+
+    private bool ActionIsAllowed(int id)
+    {
+        Claim userIdClaim = User.FindFirst(claim => claim.Type == ClaimTypes.NameIdentifier);
+        if (userIdClaim == null || Convert.ToInt32(userIdClaim.Value) != id)
+        {
+            return false;
+        }
+
+        return true;
     }
 
     private bool DataIsValid(string username, string email, IFormFile? avatar, int? id = null)

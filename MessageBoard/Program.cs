@@ -14,6 +14,7 @@ builder.Services.AddDbContext<MessageBoardDbContext>(
 builder.Services.AddAntiforgery(options =>
 {
     options.FormFieldName = "_token";
+    options.HeaderName = "X-XSRF-TOKEN";
     options.SuppressXFrameOptionsHeader = false;
 });
 
