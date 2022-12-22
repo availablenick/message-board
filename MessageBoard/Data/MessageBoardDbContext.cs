@@ -7,6 +7,7 @@ namespace MessageBoard.Data;
 public class MessageBoardDbContext : DbContext
 {
     public DbSet<User> Users { get; set; }
+    public DbSet<Topic> Topics { get; set; }
 
     public MessageBoardDbContext(DbContextOptions<MessageBoardDbContext> options)
         : base(options)

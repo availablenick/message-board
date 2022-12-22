@@ -10,4 +10,6 @@ public class User
     public bool IsDeleted { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
+
+    public List<Topic> Topics { get; set; }
 }

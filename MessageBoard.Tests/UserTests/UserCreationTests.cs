@@ -11,7 +11,7 @@ using MessageBoard.Tests.Factories;
 
 namespace MessageBoard.Tests.UserTests;
 
-[Collection("User")]
+[Collection("Sync")]
 public class UserCreationTests : IClassFixture<CustomWebApplicationFactory<Program>>
 {
     private readonly string _mainProjectPath;
