@@ -59,8 +59,8 @@ public class TopicCreationTests : IClassFixture<CustomWebApplicationFactory<Prog
 
         var topic = topicRecord.FirstOrDefault();
         Assert.NotNull(topic);
-        Assert.True(user.Topics.Exists(t => t.Id == topic.Id));
         Assert.Equal(user.Id, topic.Author.Id);
+        Assert.True(user.Topics.Exists(t => t.Id == topic.Id));
         Assert.True(topic.CreatedAt.CompareTo(timeBeforeResponse) >= 0);
         Assert.True(topic.CreatedAt.CompareTo(timeAfterResponse) <= 0);
         Assert.True(topic.CreatedAt.CompareTo(topic.UpdatedAt) == 0);
@@ -82,9 +82,7 @@ public class TopicCreationTests : IClassFixture<CustomWebApplicationFactory<Prog
             { "content", "test_content" },
         });
 
-        DateTime timeBeforeResponse = DateTime.Now;
         var response = await _client.PostAsync("/topics", content);
-        DateTime timeAfterResponse = DateTime.Now;
 
         Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
         Assert.Equal(0, await dbContext.Topics.CountAsync());
@@ -106,9 +104,7 @@ public class TopicCreationTests : IClassFixture<CustomWebApplicationFactory<Prog
             { "title", "test_title" },
         });
 
-        DateTime timeBeforeResponse = DateTime.Now;
         var response = await _client.PostAsync("/topics", content);
-        DateTime timeAfterResponse = DateTime.Now;
 
         Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
         Assert.Equal(0, await dbContext.Topics.CountAsync());
@@ -157,9 +153,7 @@ public class TopicCreationTests : IClassFixture<CustomWebApplicationFactory<Prog
             { "content", "test_content" },
         });
 
-        DateTime timeBeforeResponse = DateTime.Now;
         var response = await _client.PostAsync("/topics", content);
-        DateTime timeAfterResponse = DateTime.Now;
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         var topicRecord = from t in dbContext.Topics
@@ -167,7 +161,6 @@ public class TopicCreationTests : IClassFixture<CustomWebApplicationFactory<Prog
                                 t.Content == "test_content"
                         select t;
 
-        var topic = topicRecord.FirstOrDefault();
-        Assert.Null(topic);
+        Assert.Null(topicRecord.FirstOrDefault());
     }
 }
