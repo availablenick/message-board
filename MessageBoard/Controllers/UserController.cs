@@ -88,6 +88,7 @@ public class UserController : Controller
 
         user.Username = userDTO.Username;
         user.Email = userDTO.Email;
+        user.UpdatedAt = DateTime.Now;
         if (userDTO.Avatar != null)
         {
             user.Avatar = await StoreFile(userDTO.Avatar);
@@ -201,6 +202,10 @@ public class UserController : Controller
         var passwordHasher = new PasswordHasher<User>();
         var user = new User { Username = userDTO.Username, Email = userDTO.Email };
         user.PasswordHash = passwordHasher.HashPassword(user, userDTO.Password);
+
+        var now = DateTime.Now;
+        user.CreatedAt = now;
+        user.UpdatedAt = now;
 
         return user;
     }

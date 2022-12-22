@@ -35,11 +35,14 @@ public class UserUpdateTests : IClassFixture<CustomWebApplicationFactory<Program
     [Fact]
     public async Task UserCanBeUpdated()
     {
-        using var scope = _factory.Services.CreateScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
-        dbContext.Database.EnsureDeleted();
-        dbContext.Database.Migrate();
-        var newUser = await UserFactory.CreateUser(dbContext);
+        User newUser;
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
+            dbContext.Database.EnsureDeleted();
+            dbContext.Database.Migrate();
+            newUser = await UserFactory.CreateUser(dbContext);
+        }
 
         _client.DefaultRequestHeaders.Add("UserId", newUser.Id.ToString());
         var content = new FormUrlEncodedContent(new Dictionary<string, string>
@@ -49,15 +52,24 @@ public class UserUpdateTests : IClassFixture<CustomWebApplicationFactory<Program
             { "email", $"edit_{newUser.Email}" },
         });
 
+        var timeBeforeResponse = DateTime.Now;
         var response = await _client.PutAsync($"/users/{newUser.Id}", content);
+        var timeAfterResponse = DateTime.Now;
 
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
-        var userRecord = from u in dbContext.Users
-                        where u.Username == $"{newUser.Username}_edit" &&
-                                u.Email == $"edit_{newUser.Email}"
-                        select u;
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
+            var userRecord = from u in dbContext.Users
+                            where u.Username == $"{newUser.Username}_edit" &&
+                                    u.Email == $"edit_{newUser.Email}"
+                            select u;
 
-        Assert.NotNull(userRecord.FirstOrDefault());
+            var user = userRecord.FirstOrDefault();
+            Assert.NotNull(user);
+            Assert.True(user.UpdatedAt.CompareTo(timeBeforeResponse) >= 0);
+            Assert.True(user.UpdatedAt.CompareTo(timeAfterResponse) <= 0);
+        }
     }
 
     [Fact]

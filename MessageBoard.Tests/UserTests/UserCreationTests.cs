@@ -43,7 +43,9 @@ public class UserCreationTests : IClassFixture<CustomWebApplicationFactory<Progr
             { "password", "test_password" },
         });
 
+        DateTime timeBeforeResponse = DateTime.Now;
         var response = await _client.PostAsync("/users", content);
+        DateTime timeAfterResponse = DateTime.Now;
 
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
         var userRecord = from u in dbContext.Users
@@ -57,6 +59,9 @@ public class UserCreationTests : IClassFixture<CustomWebApplicationFactory<Progr
         PasswordVerificationResult res = passwordHasher.VerifyHashedPassword(
             user, user.PasswordHash, "test_password");
         Assert.Equal(PasswordVerificationResult.Success, res);
+        Assert.True(user.CreatedAt.CompareTo(timeBeforeResponse) >= 0);
+        Assert.True(user.CreatedAt.CompareTo(timeAfterResponse) <= 0);
+        Assert.True(user.CreatedAt.CompareTo(user.UpdatedAt) == 0);
     }
 
     [Fact]
