@@ -119,8 +119,8 @@ public class UserController : Controller
 
     private bool ActionIsAllowed(int id)
     {
-        Claim userIdClaim = User.FindFirst(claim => claim.Type == ClaimTypes.NameIdentifier);
-        if (userIdClaim == null || Convert.ToInt32(userIdClaim.Value) != id)
+        Claim userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+        if (userIdClaim == null || userIdClaim.Value != id.ToString())
         {
             return false;
         }
