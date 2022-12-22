@@ -14,13 +14,11 @@ namespace MessageBoard.Tests.UserTests;
 [Collection("Sync")]
 public class UserDeleteTests : IClassFixture<CustomWebApplicationFactory<Program>>
 {
-    private readonly string _mainProjectPath;
     private readonly CustomWebApplicationFactory<Program> _factory;
     private readonly HttpClient _client;
 
     public UserDeleteTests(CustomWebApplicationFactory<Program> factory)
     {
-        _mainProjectPath = $"{Directory.GetParent(Directory.GetCurrentDirectory())?.Parent?.Parent?.Parent?.FullName}/MessageBoard/";
         _factory = factory;
         _client = factory.CreateClient(new WebApplicationFactoryClientOptions
         {

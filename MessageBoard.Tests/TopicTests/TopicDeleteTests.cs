@@ -13,13 +13,11 @@ namespace MessageBoard.Tests.TopicTests;
 [Collection("Sync")]
 public class TopicDeleteTests : IClassFixture<CustomWebApplicationFactory<Program>>
 {
-    private readonly string _mainProjectPath;
     private readonly CustomWebApplicationFactory<Program> _factory;
     private readonly HttpClient _client;
 
     public TopicDeleteTests(CustomWebApplicationFactory<Program> factory)
     {
-        _mainProjectPath = $"{Directory.GetParent(Directory.GetCurrentDirectory()).Parent.Parent.Parent.FullName}/MessageBoard/";
         _factory = factory;
         _client = factory.CreateClient(new WebApplicationFactoryClientOptions
         {
