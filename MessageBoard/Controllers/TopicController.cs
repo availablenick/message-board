@@ -54,9 +54,7 @@ public class TopicController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Update(int id, TopicDTO topicDTO)
     {
-        var user = await GetAuthenticatedUser();
-        _context.Entry(user).Collection(u => u.Topics).Load();
-        if (!user.Topics.Exists(t => t.Id == id))
+        if (!(await IsActionAllowed(id)))
         {
             return Forbid();
         }
@@ -73,6 +71,35 @@ public class TopicController : Controller
         _context.Topics.Update(topic);
         await _context.SaveChangesAsync();
         return NoContent();
+    }
+
+    [HttpDelete]
+    [Route("{id}")]
+    [Authorize]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Delete(int id)
+    {
+        if (!(await IsActionAllowed(id)))
+        {
+            return Forbid();
+        }
+
+        var topic = await _context.Topics.FindAsync(id);
+        _context.Topics.Remove(topic);
+        await _context.SaveChangesAsync();
+        return NoContent();
+    }
+
+    private async Task<bool> IsActionAllowed(int topicId)
+    {
+        var user = await GetAuthenticatedUser();
+        if (user == null)
+        {
+            return false;
+        }
+    
+        _context.Entry(user).Collection(u => u.Topics).Load();
+        return user.Topics.Exists(t => t.Id == topicId);
     }
 
     private async Task<User> GetAuthenticatedUser()
