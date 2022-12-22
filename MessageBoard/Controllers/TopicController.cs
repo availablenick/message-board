@@ -48,6 +48,33 @@ public class TopicController : Controller
         return NoContent();
     }
 
+    [HttpPut]
+    [Route("{id}")]
+    [Authorize]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Update(int id, TopicDTO topicDTO)
+    {
+        var user = await GetAuthenticatedUser();
+        _context.Entry(user).Collection(u => u.Topics).Load();
+        if (!user.Topics.Exists(t => t.Id == id))
+        {
+            return Forbid();
+        }
+
+        if (!ModelState.IsValid)
+        {
+            return UnprocessableEntity();
+        }
+
+        var topic = await _context.Topics.FindAsync(id);
+        topic.Title = topicDTO.Title;
+        topic.Content = topicDTO.Content;
+        topic.UpdatedAt = DateTime.Now;
+        _context.Topics.Update(topic);
+        await _context.SaveChangesAsync();
+        return NoContent();
+    }
+
     private async Task<User> GetAuthenticatedUser()
     {
         Claim userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
