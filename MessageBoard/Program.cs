@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.EntityFrameworkCore;
 
@@ -18,6 +19,16 @@ builder.Services.AddAntiforgery(options =>
     options.SuppressXFrameOptionsHeader = false;
 });
 
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
+    {
+        options.AccessDeniedPath = "/forbidden";
+        options.ExpireTimeSpan = TimeSpan.FromMinutes(10);
+        options.LoginPath = "/login";
+        options.ReturnUrlParameter = "returnUrl";
+        options.SlidingExpiration = true;
+    });
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -32,14 +43,21 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
-app.MapGet("/csrf-token", (IAntiforgery forgeryService, HttpContext context) =>
-{
-    var tokens = forgeryService.GetAndStoreTokens(context);
-    context.Response.Cookies.Append("XSRF-TOKEN", tokens.RequestToken,
-        new CookieOptions { HttpOnly = false });
 
-    return Results.Ok();
-});
+if (app.Environment.IsStaging())
+{
+    app.MapGet("/secure-endpoint", (HttpContext context) => Results.Ok())
+        .RequireAuthorization();
+
+    app.MapGet("/csrf-token", (IAntiforgery forgeryService, HttpContext context) =>
+    {
+        var tokens = forgeryService.GetAndStoreTokens(context);
+        context.Response.Cookies.Append("XSRF-TOKEN", tokens.RequestToken,
+            new CookieOptions { HttpOnly = false });
+
+        return Results.Ok();
+    });
+}
 
 app.Run();
 
