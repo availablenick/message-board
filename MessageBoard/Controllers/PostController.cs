@@ -7,7 +7,6 @@ using MessageBoard.Models;
 
 namespace MessageBoard.Controllers;
 
-[Route("topics/{topicId}/posts")]
 public class PostController : Controller
 {
     public class PostDTO
@@ -23,6 +22,7 @@ public class PostController : Controller
     }
 
     [HttpPost]
+    [Route("topics/{topicId}/posts")]
     [Authorize]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(int topicId, PostDTO postDTO)
@@ -47,6 +47,47 @@ public class PostController : Controller
         await _context.Posts.AddAsync(post);
         await _context.SaveChangesAsync();
         return NoContent();
+    }
+
+    [HttpPut]
+    [Route("posts/{id}")]
+    [Authorize]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Update(int id, PostDTO postDTO)
+    {
+        var post = await _context.Posts.FindAsync(id);
+        if (post == null)
+        {
+            return NotFound();
+        }
+
+        if (!(await IsActionAllowed(id)))
+        {
+            return Forbid();
+        }
+
+        if (!ModelState.IsValid)
+        {
+            return UnprocessableEntity();
+        }
+
+        post.Content = postDTO.Content;
+        post.UpdatedAt = DateTime.Now;
+        _context.Posts.Update(post);
+        await _context.SaveChangesAsync();
+        return NoContent();
+    }
+
+    private async Task<bool> IsActionAllowed(int postId)
+    {
+        var user = await GetAuthenticatedUser();
+        if (user == null)
+        {
+            return false;
+        }
+    
+        _context.Entry(user).Collection(u => u.Posts).Load();
+        return user.Posts.Exists(p => p.Id == postId);
     }
 
     private async Task<User> GetAuthenticatedUser()
