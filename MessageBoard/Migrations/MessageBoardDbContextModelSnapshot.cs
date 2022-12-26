@@ -22,6 +22,39 @@ namespace MessageBoard.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("MessageBoard.Models.Post", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("AuthorId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("TopicId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AuthorId");
+
+                    b.HasIndex("TopicId");
+
+                    b.ToTable("Posts");
+                });
+
             modelBuilder.Entity("MessageBoard.Models.Topic", b =>
                 {
                     b.Property<int>("Id")
@@ -97,15 +130,44 @@ namespace MessageBoard.Migrations
                     b.ToTable("Users");
                 });
 
+            modelBuilder.Entity("MessageBoard.Models.Post", b =>
+                {
+                    b.HasOne("MessageBoard.Models.User", "Author")
+                        .WithMany("Posts")
+                        .HasForeignKey("AuthorId");
+
+                    b.HasOne("MessageBoard.Models.Topic", "Topic")
+                        .WithMany("Posts")
+                        .HasForeignKey("TopicId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Author");
+
+                    b.Navigation("Topic");
+                });
+
             modelBuilder.Entity("MessageBoard.Models.Topic", b =>
                 {
                     b.HasOne("MessageBoard.Models.User", "Author")
-                        .WithMany()
+                        .WithMany("Topics")
                         .HasForeignKey("AuthorId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Author");
+                });
+
+            modelBuilder.Entity("MessageBoard.Models.Topic", b =>
+                {
+                    b.Navigation("Posts");
+                });
+
+            modelBuilder.Entity("MessageBoard.Models.User", b =>
+                {
+                    b.Navigation("Posts");
+
+                    b.Navigation("Topics");
                 });
 #pragma warning restore 612, 618
         }

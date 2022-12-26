@@ -8,6 +8,7 @@ public class MessageBoardDbContext : DbContext
 {
     public DbSet<User> Users { get; set; }
     public DbSet<Topic> Topics { get; set; }
+    public DbSet<Post> Posts { get; set; }
 
     public MessageBoardDbContext(DbContextOptions<MessageBoardDbContext> options)
         : base(options)
