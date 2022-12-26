@@ -157,7 +157,7 @@ public class TopicUpdateTests : IClassFixture<CustomWebApplicationFactory<Progra
     }
 
     [Fact]
-    public async Task TopicCannotBeCreatedByUnauthenticatedUser()
+    public async Task TopicCannotBeUpdatedByUnauthenticatedUser()
     {
         using var scope = _factory.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
