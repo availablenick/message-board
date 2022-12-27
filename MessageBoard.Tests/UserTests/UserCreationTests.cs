@@ -7,7 +7,6 @@ using System.Net.Http.Headers;
 
 using MessageBoard.Data;
 using MessageBoard.Models;
-using MessageBoard.Tests.Factories;
 
 namespace MessageBoard.Tests.UserTests;
 
@@ -91,7 +90,7 @@ public class UserCreationTests : IClassFixture<CustomWebApplicationFactory<Progr
         var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
         dbContext.Database.EnsureDeleted();
         dbContext.Database.Migrate();
-        var newUser = await UserFactory.CreateUser(dbContext);
+        var newUser = await DataFactory.CreateUser(dbContext);
 
         var content = new FormUrlEncodedContent(new Dictionary<string, string>
         {
@@ -154,7 +153,7 @@ public class UserCreationTests : IClassFixture<CustomWebApplicationFactory<Progr
         var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
         dbContext.Database.EnsureDeleted();
         dbContext.Database.Migrate();
-        var newUser = await UserFactory.CreateUser(dbContext);
+        var newUser = await DataFactory.CreateUser(dbContext);
 
         var content = new FormUrlEncodedContent(new Dictionary<string, string>
         {

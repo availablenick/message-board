@@ -6,7 +6,6 @@ using System.Net.Http.Headers;
 
 using MessageBoard.Data;
 using MessageBoard.Models;
-using MessageBoard.Tests.Factories;
 
 namespace MessageBoard.Tests.TopicTests;
 
@@ -35,10 +34,9 @@ public class TopicDeleteTests : IClassFixture<CustomWebApplicationFactory<Progra
         var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
         dbContext.Database.EnsureDeleted();
         dbContext.Database.Migrate();
-        var user = await UserFactory.CreateUser(dbContext);
-        var topic = await TopicFactory.CreateTopic(user, dbContext);
+        var topic = await DataFactory.CreateTopic(dbContext);
 
-        _client.DefaultRequestHeaders.Add("UserId", user.Id.ToString());
+        _client.DefaultRequestHeaders.Add("UserId", topic.Author.Id.ToString());
         _client.DefaultRequestHeaders.Add("X-XSRF-TOKEN", await Utilities.GetCSRFToken(_client));
         var response = await _client.DeleteAsync($"/topics/{topic.Id}");
 
@@ -57,11 +55,10 @@ public class TopicDeleteTests : IClassFixture<CustomWebApplicationFactory<Progra
         var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
         dbContext.Database.EnsureDeleted();
         dbContext.Database.Migrate();
-        var user1 = await UserFactory.CreateUser(dbContext);
-        var user2 = await UserFactory.CreateUser(dbContext);
-        var topic = await TopicFactory.CreateTopic(user2, dbContext);
+        var user = await DataFactory.CreateUser(dbContext);
+        var topic = await DataFactory.CreateTopic(dbContext);
 
-        _client.DefaultRequestHeaders.Add("UserId", user1.Id.ToString());
+        _client.DefaultRequestHeaders.Add("UserId", user.Id.ToString());
         _client.DefaultRequestHeaders.Add("X-XSRF-TOKEN", await Utilities.GetCSRFToken(_client));
         var response = await _client.DeleteAsync($"/topics/{topic.Id}");
 
@@ -80,8 +77,7 @@ public class TopicDeleteTests : IClassFixture<CustomWebApplicationFactory<Progra
         var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
         dbContext.Database.EnsureDeleted();
         dbContext.Database.Migrate();
-        var user = await UserFactory.CreateUser(dbContext);
-        var topic = await TopicFactory.CreateTopic(user, dbContext);
+        var topic = await DataFactory.CreateTopic(dbContext);
 
         _client.DefaultRequestHeaders.Remove("Authorization");
         var response = await _client.DeleteAsync($"/topics/{topic.Id}");
@@ -101,7 +97,7 @@ public class TopicDeleteTests : IClassFixture<CustomWebApplicationFactory<Progra
         var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
         dbContext.Database.EnsureDeleted();
         dbContext.Database.Migrate();
-        var user = await UserFactory.CreateUser(dbContext);
+        var user = await DataFactory.CreateUser(dbContext);
 
         _client.DefaultRequestHeaders.Add("UserId", user.Id.ToString());
         _client.DefaultRequestHeaders.Add("X-XSRF-TOKEN", await Utilities.GetCSRFToken(_client));
@@ -117,10 +113,9 @@ public class TopicDeleteTests : IClassFixture<CustomWebApplicationFactory<Progra
         var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
         dbContext.Database.EnsureDeleted();
         dbContext.Database.Migrate();
-        var user = await UserFactory.CreateUser(dbContext);
-        var topic = await TopicFactory.CreateTopic(user, dbContext);
+        var topic = await DataFactory.CreateTopic(dbContext);
 
-        _client.DefaultRequestHeaders.Add("UserId", user.Id.ToString());
+        _client.DefaultRequestHeaders.Add("UserId", topic.Author.Id.ToString());
         var response = await _client.DeleteAsync($"/topics/{topic.Id}");
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -138,10 +133,9 @@ public class TopicDeleteTests : IClassFixture<CustomWebApplicationFactory<Progra
         var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
         dbContext.Database.EnsureDeleted();
         dbContext.Database.Migrate();
-        var user = await UserFactory.CreateUser(dbContext);
-        var topic = await TopicFactory.CreateTopic(user, dbContext);
+        var topic = await DataFactory.CreateTopic(dbContext);
 
-        _client.DefaultRequestHeaders.Add("UserId", user.Id.ToString());
+        _client.DefaultRequestHeaders.Add("UserId", topic.Author.Id.ToString());
         var content = new FormUrlEncodedContent(new Dictionary<string, string>
         {
             { "_method", "DELETE" },

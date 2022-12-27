@@ -7,7 +7,6 @@ using System.Net.Http.Headers;
 
 using MessageBoard.Data;
 using MessageBoard.Models;
-using MessageBoard.Tests.Factories;
 
 namespace MessageBoard.Tests.UserTests;
 
@@ -36,7 +35,7 @@ public class UserDeleteTests : IClassFixture<CustomWebApplicationFactory<Program
         var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
         dbContext.Database.EnsureDeleted();
         dbContext.Database.Migrate();
-        var newUser = await UserFactory.CreateUser(dbContext);
+        var newUser = await DataFactory.CreateUser(dbContext);
 
         _client.DefaultRequestHeaders.Add("UserId", newUser.Id.ToString());
         _client.DefaultRequestHeaders.Add("X-XSRF-TOKEN", await Utilities.GetCSRFToken(_client));
@@ -59,7 +58,7 @@ public class UserDeleteTests : IClassFixture<CustomWebApplicationFactory<Program
         var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
         dbContext.Database.EnsureDeleted();
         dbContext.Database.Migrate();
-        var newUser = await UserFactory.CreateUser(dbContext);
+        var newUser = await DataFactory.CreateUser(dbContext);
 
         _client.DefaultRequestHeaders.Remove("Authorization");
         var response = await _client.DeleteAsync($"/users/{newUser.Id}");
@@ -81,7 +80,7 @@ public class UserDeleteTests : IClassFixture<CustomWebApplicationFactory<Program
         var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
         dbContext.Database.EnsureDeleted();
         dbContext.Database.Migrate();
-        var user = await UserFactory.CreateUser(dbContext);
+        var user = await DataFactory.CreateUser(dbContext);
 
         _client.DefaultRequestHeaders.Add("UserId", user.Id.ToString());
         _client.DefaultRequestHeaders.Add("X-XSRF-TOKEN", await Utilities.GetCSRFToken(_client));
@@ -97,8 +96,8 @@ public class UserDeleteTests : IClassFixture<CustomWebApplicationFactory<Program
         var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
         dbContext.Database.EnsureDeleted();
         dbContext.Database.Migrate();
-        var user1 = await UserFactory.CreateUser(dbContext);
-        var user2 = await UserFactory.CreateUser(dbContext);
+        var user1 = await DataFactory.CreateUser(dbContext);
+        var user2 = await DataFactory.CreateUser(dbContext);
 
         _client.DefaultRequestHeaders.Add("UserId", user1.Id.ToString());
         _client.DefaultRequestHeaders.Add("X-XSRF-TOKEN", await Utilities.GetCSRFToken(_client));
@@ -121,7 +120,7 @@ public class UserDeleteTests : IClassFixture<CustomWebApplicationFactory<Program
         var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
         dbContext.Database.EnsureDeleted();
         dbContext.Database.Migrate();
-        var newUser = await UserFactory.CreateUser(dbContext);
+        var newUser = await DataFactory.CreateUser(dbContext);
 
         _client.DefaultRequestHeaders.Add("UserId", newUser.Id.ToString());
         var response = await _client.DeleteAsync($"/users/{newUser.Id}");
@@ -143,7 +142,7 @@ public class UserDeleteTests : IClassFixture<CustomWebApplicationFactory<Program
         var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
         dbContext.Database.EnsureDeleted();
         dbContext.Database.Migrate();
-        var newUser = await UserFactory.CreateUser(dbContext);
+        var newUser = await DataFactory.CreateUser(dbContext);
 
         _client.DefaultRequestHeaders.Add("UserId", newUser.Id.ToString());
         var content = new FormUrlEncodedContent(new Dictionary<string, string>

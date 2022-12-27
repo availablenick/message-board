@@ -8,7 +8,6 @@ using System.Net.Http.Headers;
 
 using MessageBoard.Data;
 using MessageBoard.Models;
-using MessageBoard.Tests.Factories;
 
 namespace MessageBoard.Tests.UserTests;
 
@@ -41,7 +40,7 @@ public class UserUpdateTests : IClassFixture<CustomWebApplicationFactory<Program
             var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
             dbContext.Database.EnsureDeleted();
             dbContext.Database.Migrate();
-            newUser = await UserFactory.CreateUser(dbContext);
+            newUser = await DataFactory.CreateUser(dbContext);
         }
 
         _client.DefaultRequestHeaders.Add("UserId", newUser.Id.ToString());
@@ -79,7 +78,7 @@ public class UserUpdateTests : IClassFixture<CustomWebApplicationFactory<Program
         var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
         dbContext.Database.EnsureDeleted();
         dbContext.Database.Migrate();
-        var newUser = await UserFactory.CreateUser(dbContext);
+        var newUser = await DataFactory.CreateUser(dbContext);
 
         _client.DefaultRequestHeaders.Add("UserId", newUser.Id.ToString());
         var content = new FormUrlEncodedContent(new Dictionary<string, string>
@@ -105,8 +104,8 @@ public class UserUpdateTests : IClassFixture<CustomWebApplicationFactory<Program
         var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
         dbContext.Database.EnsureDeleted();
         dbContext.Database.Migrate();
-        var user1 = await UserFactory.CreateUser(dbContext);
-        var user2 = await UserFactory.CreateUser(dbContext);
+        var user1 = await DataFactory.CreateUser(dbContext);
+        var user2 = await DataFactory.CreateUser(dbContext);
 
         _client.DefaultRequestHeaders.Add("UserId", user1.Id.ToString());
         var content = new FormUrlEncodedContent(new Dictionary<string, string>
@@ -130,7 +129,7 @@ public class UserUpdateTests : IClassFixture<CustomWebApplicationFactory<Program
         var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
         dbContext.Database.EnsureDeleted();
         dbContext.Database.Migrate();
-        var newUser = await UserFactory.CreateUser(dbContext);
+        var newUser = await DataFactory.CreateUser(dbContext);
 
         _client.DefaultRequestHeaders.Add("UserId", newUser.Id.ToString());
         var content = new FormUrlEncodedContent(new Dictionary<string, string>
@@ -158,7 +157,7 @@ public class UserUpdateTests : IClassFixture<CustomWebApplicationFactory<Program
         var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
         dbContext.Database.EnsureDeleted();
         dbContext.Database.Migrate();
-        var newUser = await UserFactory.CreateUser(dbContext);
+        var newUser = await DataFactory.CreateUser(dbContext);
 
         _client.DefaultRequestHeaders.Add("UserId", newUser.Id.ToString());
         var content = new FormUrlEncodedContent(new Dictionary<string, string>
@@ -184,8 +183,8 @@ public class UserUpdateTests : IClassFixture<CustomWebApplicationFactory<Program
         var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
         dbContext.Database.EnsureDeleted();
         dbContext.Database.Migrate();
-        var user1 = await UserFactory.CreateUser(dbContext);
-        var user2 = await UserFactory.CreateUser(dbContext);
+        var user1 = await DataFactory.CreateUser(dbContext);
+        var user2 = await DataFactory.CreateUser(dbContext);
 
         _client.DefaultRequestHeaders.Add("UserId", user1.Id.ToString());
         var content = new FormUrlEncodedContent(new Dictionary<string, string>
@@ -209,7 +208,7 @@ public class UserUpdateTests : IClassFixture<CustomWebApplicationFactory<Program
         var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
         dbContext.Database.EnsureDeleted();
         dbContext.Database.Migrate();
-        var newUser = await UserFactory.CreateUser(dbContext);
+        var newUser = await DataFactory.CreateUser(dbContext);
 
         _client.DefaultRequestHeaders.Add("UserId", newUser.Id.ToString());
         var content = new FormUrlEncodedContent(new Dictionary<string, string>
@@ -237,7 +236,7 @@ public class UserUpdateTests : IClassFixture<CustomWebApplicationFactory<Program
         var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
         dbContext.Database.EnsureDeleted();
         dbContext.Database.Migrate();
-        var newUser = await UserFactory.CreateUser(dbContext);
+        var newUser = await DataFactory.CreateUser(dbContext);
 
         var content = new FormUrlEncodedContent(new Dictionary<string, string>
         {
@@ -264,8 +263,8 @@ public class UserUpdateTests : IClassFixture<CustomWebApplicationFactory<Program
         var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
         dbContext.Database.EnsureDeleted();
         dbContext.Database.Migrate();
-        var user1 = await UserFactory.CreateUser(dbContext);
-        var user2 = await UserFactory.CreateUser(dbContext);
+        var user1 = await DataFactory.CreateUser(dbContext);
+        var user2 = await DataFactory.CreateUser(dbContext);
 
         _client.DefaultRequestHeaders.Add("UserId", user2.Id.ToString());
         var content = new FormUrlEncodedContent(new Dictionary<string, string>
@@ -293,7 +292,7 @@ public class UserUpdateTests : IClassFixture<CustomWebApplicationFactory<Program
         var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
         dbContext.Database.EnsureDeleted();
         dbContext.Database.Migrate();
-        var user = await UserFactory.CreateUser(dbContext);
+        var user = await DataFactory.CreateUser(dbContext);
 
         _client.DefaultRequestHeaders.Add("UserId", user.Id.ToString());
         var content = new FormUrlEncodedContent(new Dictionary<string, string>
@@ -317,7 +316,7 @@ public class UserUpdateTests : IClassFixture<CustomWebApplicationFactory<Program
             var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
             dbContext.Database.EnsureDeleted();
             dbContext.Database.Migrate();
-            newUser = await UserFactory.CreateUser(dbContext);
+            newUser = await DataFactory.CreateUser(dbContext);
         }
 
         _client.DefaultRequestHeaders.Add("UserId", newUser.Id.ToString());
@@ -359,7 +358,7 @@ public class UserUpdateTests : IClassFixture<CustomWebApplicationFactory<Program
             var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
             dbContext.Database.EnsureDeleted();
             dbContext.Database.Migrate();
-            newUser = await UserFactory.CreateUser(dbContext);
+            newUser = await DataFactory.CreateUser(dbContext);
         }
 
         _client.DefaultRequestHeaders.Add("UserId", newUser.Id.ToString());
@@ -399,7 +398,7 @@ public class UserUpdateTests : IClassFixture<CustomWebApplicationFactory<Program
         var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
         dbContext.Database.EnsureDeleted();
         dbContext.Database.Migrate();
-        var newUser = await UserFactory.CreateUser(dbContext);
+        var newUser = await DataFactory.CreateUser(dbContext);
 
         _client.DefaultRequestHeaders.Add("UserId", newUser.Id.ToString());
         var csrfToken = await Utilities.GetCSRFToken(_client);
@@ -432,7 +431,7 @@ public class UserUpdateTests : IClassFixture<CustomWebApplicationFactory<Program
         var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
         dbContext.Database.EnsureDeleted();
         dbContext.Database.Migrate();
-        var newUser = await UserFactory.CreateUser(dbContext);
+        var newUser = await DataFactory.CreateUser(dbContext);
 
         var content = new FormUrlEncodedContent(new Dictionary<string, string>
         {
@@ -459,7 +458,7 @@ public class UserUpdateTests : IClassFixture<CustomWebApplicationFactory<Program
         var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
         dbContext.Database.EnsureDeleted();
         dbContext.Database.Migrate();
-        var newUser = await UserFactory.CreateUser(dbContext);
+        var newUser = await DataFactory.CreateUser(dbContext);
 
         _client.DefaultRequestHeaders.Add("UserId", newUser.Id.ToString());
         var content = new FormUrlEncodedContent(new Dictionary<string, string>

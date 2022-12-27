@@ -6,7 +6,6 @@ using System.Net.Http.Headers;
 
 using MessageBoard.Data;
 using MessageBoard.Models;
-using MessageBoard.Tests.Factories;
 
 namespace MessageBoard.Tests.PostTests;
 
@@ -31,20 +30,16 @@ public class PostDeleteTests : IClassFixture<CustomWebApplicationFactory<Program
     [Fact]
     public async Task PostCanBeDeleted()
     {
-        User user;
-        Topic topic;
         Post post;
         using (var scope = _factory.Services.CreateScope())
         {
             var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
             dbContext.Database.EnsureDeleted();
             dbContext.Database.Migrate();
-            user = await UserFactory.CreateUser(dbContext);
-            topic = await TopicFactory.CreateTopic(user, dbContext);
-            post = await PostFactory.CreatePost(user, topic, dbContext);
+            post = await DataFactory.CreatePost(dbContext);
         }
 
-        _client.DefaultRequestHeaders.Add("UserId", user.Id.ToString());
+        _client.DefaultRequestHeaders.Add("UserId", post.Author.Id.ToString());
         _client.DefaultRequestHeaders.Add("X-XSRF-TOKEN", await Utilities.GetCSRFToken(_client));
         var response = await _client.DeleteAsync($"/posts/{post.Id}");
 
@@ -57,8 +52,8 @@ public class PostDeleteTests : IClassFixture<CustomWebApplicationFactory<Program
                             select p;
 
             Assert.Null(postRecord.FirstOrDefault());
-            var freshUser = await dbContext.Users.Include(u => u.Posts).FirstAsync(u => u.Id == user.Id);
-            var freshTopic = await dbContext.Topics.Include(t => t.Posts).FirstAsync(t => t.Id == topic.Id);
+            var freshUser = await dbContext.Users.Include(u => u.Posts).FirstAsync(u => u.Id == post.Author.Id);
+            var freshTopic = await dbContext.Topics.Include(t => t.Posts).FirstAsync(t => t.Id == post.Topic.Id);
             Assert.Equal(0, freshUser.Posts.Count);
             Assert.Equal(0, freshTopic.Posts.Count);
         }
@@ -71,12 +66,10 @@ public class PostDeleteTests : IClassFixture<CustomWebApplicationFactory<Program
         var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
         dbContext.Database.EnsureDeleted();
         dbContext.Database.Migrate();
-        var user1 = await UserFactory.CreateUser(dbContext);
-        var user2 = await UserFactory.CreateUser(dbContext);
-        var topic = await TopicFactory.CreateTopic(user2, dbContext);
-        var newPost = await PostFactory.CreatePost(user2, topic, dbContext);
+        var user = await DataFactory.CreateUser(dbContext);
+        var newPost = await DataFactory.CreatePost(dbContext);
 
-        _client.DefaultRequestHeaders.Add("UserId", user1.Id.ToString());
+        _client.DefaultRequestHeaders.Add("UserId", user.Id.ToString());
         _client.DefaultRequestHeaders.Add("X-XSRF-TOKEN", await Utilities.GetCSRFToken(_client));
         var response = await _client.DeleteAsync($"/posts/{newPost.Id}");
 
@@ -95,9 +88,7 @@ public class PostDeleteTests : IClassFixture<CustomWebApplicationFactory<Program
         var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
         dbContext.Database.EnsureDeleted();
         dbContext.Database.Migrate();
-        var user = await UserFactory.CreateUser(dbContext);
-        var topic = await TopicFactory.CreateTopic(user, dbContext);
-        var newPost = await PostFactory.CreatePost(user, topic, dbContext);
+        var newPost = await DataFactory.CreatePost(dbContext);
 
         _client.DefaultRequestHeaders.Remove("Authorization");
         var response = await _client.DeleteAsync($"/posts/{newPost.Id}");
@@ -117,7 +108,7 @@ public class PostDeleteTests : IClassFixture<CustomWebApplicationFactory<Program
         var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
         dbContext.Database.EnsureDeleted();
         dbContext.Database.Migrate();
-        var user = await UserFactory.CreateUser(dbContext);
+        var user = await DataFactory.CreateUser(dbContext);
 
         _client.DefaultRequestHeaders.Add("UserId", user.Id.ToString());
         _client.DefaultRequestHeaders.Add("X-XSRF-TOKEN", await Utilities.GetCSRFToken(_client));
@@ -133,11 +124,9 @@ public class PostDeleteTests : IClassFixture<CustomWebApplicationFactory<Program
         var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
         dbContext.Database.EnsureDeleted();
         dbContext.Database.Migrate();
-        var user = await UserFactory.CreateUser(dbContext);
-        var topic = await TopicFactory.CreateTopic(user, dbContext);
-        var newPost = await PostFactory.CreatePost(user, topic, dbContext);
+        var newPost = await DataFactory.CreatePost(dbContext);
 
-        _client.DefaultRequestHeaders.Add("UserId", user.Id.ToString());
+        _client.DefaultRequestHeaders.Add("UserId", newPost.Author.Id.ToString());
         var response = await _client.DeleteAsync($"/posts/{newPost.Id}");
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -151,20 +140,16 @@ public class PostDeleteTests : IClassFixture<CustomWebApplicationFactory<Program
     [Fact]
     public async Task HTTPMethodOverrideCanBeUsed()
     {
-        User user;
-        Topic topic;
         Post post;
         using (var scope = _factory.Services.CreateScope())
         {
             var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
             dbContext.Database.EnsureDeleted();
             dbContext.Database.Migrate();
-            user = await UserFactory.CreateUser(dbContext);
-            topic = await TopicFactory.CreateTopic(user, dbContext);
-            post = await PostFactory.CreatePost(user, topic, dbContext);
+            post = await DataFactory.CreatePost(dbContext);
         }
 
-        _client.DefaultRequestHeaders.Add("UserId", user.Id.ToString());
+        _client.DefaultRequestHeaders.Add("UserId", post.Author.Id.ToString());
         var content = new FormUrlEncodedContent(new Dictionary<string, string>
         {
             { "_method", "DELETE" },
@@ -182,8 +167,8 @@ public class PostDeleteTests : IClassFixture<CustomWebApplicationFactory<Program
                             select p;
 
             Assert.Null(postRecord.FirstOrDefault());
-            var freshUser = await dbContext.Users.Include(u => u.Posts).FirstAsync(u => u.Id == user.Id);
-            var freshTopic = await dbContext.Topics.Include(t => t.Posts).FirstAsync(t => t.Id == topic.Id);
+            var freshUser = await dbContext.Users.Include(u => u.Posts).FirstAsync(u => u.Id == post.Author.Id);
+            var freshTopic = await dbContext.Topics.Include(t => t.Posts).FirstAsync(t => t.Id == post.Topic.Id);
             Assert.Equal(0, freshUser.Posts.Count);
             Assert.Equal(0, freshTopic.Posts.Count);
         }

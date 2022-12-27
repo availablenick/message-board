@@ -6,7 +6,6 @@ using System.Net.Http.Headers;
 
 using MessageBoard.Data;
 using MessageBoard.Models;
-using MessageBoard.Tests.Factories;
 
 namespace MessageBoard.Tests.TopicTests;
 
@@ -35,7 +34,7 @@ public class TopicCreationTests : IClassFixture<CustomWebApplicationFactory<Prog
         var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
         dbContext.Database.EnsureDeleted();
         dbContext.Database.Migrate();
-        var user = await UserFactory.CreateUser(dbContext);
+        var user = await DataFactory.CreateUser(dbContext);
 
         _client.DefaultRequestHeaders.Add("UserId", user.Id.ToString());
         var content = new FormUrlEncodedContent(new Dictionary<string, string>
@@ -71,7 +70,7 @@ public class TopicCreationTests : IClassFixture<CustomWebApplicationFactory<Prog
         var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
         dbContext.Database.EnsureDeleted();
         dbContext.Database.Migrate();
-        var user = await UserFactory.CreateUser(dbContext);
+        var user = await DataFactory.CreateUser(dbContext);
 
         _client.DefaultRequestHeaders.Add("UserId", user.Id.ToString());
         var content = new FormUrlEncodedContent(new Dictionary<string, string>
@@ -93,7 +92,7 @@ public class TopicCreationTests : IClassFixture<CustomWebApplicationFactory<Prog
         var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
         dbContext.Database.EnsureDeleted();
         dbContext.Database.Migrate();
-        var user = await UserFactory.CreateUser(dbContext);
+        var user = await DataFactory.CreateUser(dbContext);
 
         _client.DefaultRequestHeaders.Add("UserId", user.Id.ToString());
         var content = new FormUrlEncodedContent(new Dictionary<string, string>
@@ -115,7 +114,6 @@ public class TopicCreationTests : IClassFixture<CustomWebApplicationFactory<Prog
         var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
         dbContext.Database.EnsureDeleted();
         dbContext.Database.Migrate();
-        var user = await UserFactory.CreateUser(dbContext);
 
         _client.DefaultRequestHeaders.Remove("Authorization");
         var content = new FormUrlEncodedContent(new Dictionary<string, string>
@@ -142,7 +140,7 @@ public class TopicCreationTests : IClassFixture<CustomWebApplicationFactory<Prog
         var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
         dbContext.Database.EnsureDeleted();
         dbContext.Database.Migrate();
-        var user = await UserFactory.CreateUser(dbContext);
+        var user = await DataFactory.CreateUser(dbContext);
 
         _client.DefaultRequestHeaders.Add("UserId", user.Id.ToString());
         var content = new FormUrlEncodedContent(new Dictionary<string, string>
