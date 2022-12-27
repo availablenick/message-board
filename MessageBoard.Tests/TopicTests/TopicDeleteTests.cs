@@ -30,22 +30,31 @@ public class TopicDeleteTests : IClassFixture<CustomWebApplicationFactory<Progra
     [Fact]
     public async Task TopicCanBeDeleted()
     {
-        using var scope = _factory.Services.CreateScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
-        dbContext.Database.EnsureDeleted();
-        dbContext.Database.Migrate();
-        var topic = await DataFactory.CreateTopic(dbContext);
+        Topic topic;
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
+            dbContext.Database.EnsureDeleted();
+            dbContext.Database.Migrate();
+            topic = await DataFactory.CreateTopic(dbContext);
+        }
 
         _client.DefaultRequestHeaders.Add("UserId", topic.Author.Id.ToString());
         _client.DefaultRequestHeaders.Add("X-XSRF-TOKEN", await Utilities.GetCSRFToken(_client));
         var response = await _client.DeleteAsync($"/topics/{topic.Id}");
 
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
-        var topicRecord = from t in dbContext.Topics
-                        where t.Id == topic.Id
-                        select t;
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
+            var topicRecord = from t in dbContext.Topics
+                            where t.Id == topic.Id
+                            select t;
 
-        Assert.Null(topicRecord.FirstOrDefault());
+            Assert.Null(topicRecord.FirstOrDefault());
+            var freshUser = await dbContext.Users.Include(u => u.Topics).FirstAsync(u => u.Id == topic.Author.Id);
+            Assert.Equal(0, freshUser.Topics.Count);
+        }
     }
 
     [Fact]
