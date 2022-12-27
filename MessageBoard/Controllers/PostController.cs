@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 
 using MessageBoard.Data;
@@ -74,6 +75,28 @@ public class PostController : Controller
         post.Content = postDTO.Content;
         post.UpdatedAt = DateTime.Now;
         _context.Posts.Update(post);
+        await _context.SaveChangesAsync();
+        return NoContent();
+    }
+
+    [HttpDelete]
+    [Route("posts/{id}")]
+    [Authorize]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Delete(int id)
+    {
+        var post = await _context.Posts.FindAsync(id);
+        if (post == null)
+        {
+            return NotFound();
+        }
+
+        if (!(await IsActionAllowed(id)))
+        {
+            return Forbid();
+        }
+
+        _context.Posts.Remove(post);
         await _context.SaveChangesAsync();
         return NoContent();
     }
