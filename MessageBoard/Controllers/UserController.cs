@@ -68,15 +68,15 @@ public class UserController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Update(int id, UserUpdateDTO userDTO)
     {
-        if (!ActionIsAllowed(id))
-        {
-            return Forbid();
-        }
-
         var user = await _context.Users.FindAsync(id);
         if (user == null)
         {
             return NotFound();
+        }
+
+        if (!ActionIsAllowed(id))
+        {
+            return Forbid();
         }
 
         if (!DataIsValid(userDTO.Username, userDTO.Email, userDTO.Avatar, id))
@@ -103,12 +103,17 @@ public class UserController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Delete(int id)
     {
+        var user = await _context.Users.FindAsync(id);
+        if (user == null)
+        {
+            return NotFound();
+        }
+
         if (!ActionIsAllowed(id))
         {
             return Forbid();
         }
 
-        var user = await _context.Users.FindAsync(id);
         user.IsDeleted = true;
         _context.Users.Update(user);
         await _context.SaveChangesAsync();

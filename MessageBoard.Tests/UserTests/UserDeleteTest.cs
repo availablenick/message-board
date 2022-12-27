@@ -75,6 +75,22 @@ public class UserDeleteTests : IClassFixture<CustomWebApplicationFactory<Program
     }
 
     [Fact]
+    public async Task NonExistentUserCannotBeDeleted()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
+        dbContext.Database.EnsureDeleted();
+        dbContext.Database.Migrate();
+        var user = await UserFactory.CreateUser(dbContext);
+
+        _client.DefaultRequestHeaders.Add("UserId", user.Id.ToString());
+        _client.DefaultRequestHeaders.Add("X-XSRF-TOKEN", await Utilities.GetCSRFToken(_client));
+        var response = await _client.DeleteAsync($"/users/{user.Id+1}");
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Fact]
     public async Task UserCannotBeDeletedByAnyoneOtherThanThemselves()
     {
         using var scope = _factory.Services.CreateScope();

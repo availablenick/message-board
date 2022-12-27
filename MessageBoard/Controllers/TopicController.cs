@@ -54,6 +54,12 @@ public class TopicController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Update(int id, TopicDTO topicDTO)
     {
+        var topic = await _context.Topics.FindAsync(id);
+        if (topic == null)
+        {
+            return NotFound();
+        }
+
         if (!(await IsActionAllowed(id)))
         {
             return Forbid();
@@ -64,7 +70,6 @@ public class TopicController : Controller
             return UnprocessableEntity();
         }
 
-        var topic = await _context.Topics.FindAsync(id);
         topic.Title = topicDTO.Title;
         topic.Content = topicDTO.Content;
         topic.UpdatedAt = DateTime.Now;
@@ -79,12 +84,17 @@ public class TopicController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Delete(int id)
     {
+        var topic = await _context.Topics.FindAsync(id);
+        if (topic == null)
+        {
+            return NotFound();
+        }
+
         if (!(await IsActionAllowed(id)))
         {
             return Forbid();
         }
 
-        var topic = await _context.Topics.FindAsync(id);
         _context.Topics.Remove(topic);
         await _context.SaveChangesAsync();
         return NoContent();

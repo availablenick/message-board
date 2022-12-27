@@ -185,6 +185,28 @@ public class TopicUpdateTests : IClassFixture<CustomWebApplicationFactory<Progra
     }
 
     [Fact]
+    public async Task UserCannotUpdateNonExistentTopic()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
+        dbContext.Database.EnsureDeleted();
+        dbContext.Database.Migrate();
+        var user = await UserFactory.CreateUser(dbContext);
+
+        _client.DefaultRequestHeaders.Add("UserId", user.Id.ToString());
+        var content = new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            { "_token", await Utilities.GetCSRFToken(_client) },
+            { "title", "test_title" },
+            { "content", "test_content" },
+        });
+
+        var response = await _client.PutAsync("/topics/1", content);
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Fact]
     public async Task CSRFProtectionIsActive()
     {
         using var scope = _factory.Services.CreateScope();

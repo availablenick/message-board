@@ -287,6 +287,28 @@ public class UserUpdateTests : IClassFixture<CustomWebApplicationFactory<Program
     }
 
     [Fact]
+    public async Task NonExistentUserCannotBeUpdated()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
+        dbContext.Database.EnsureDeleted();
+        dbContext.Database.Migrate();
+        var user = await UserFactory.CreateUser(dbContext);
+
+        _client.DefaultRequestHeaders.Add("UserId", user.Id.ToString());
+        var content = new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            { "_token", await Utilities.GetCSRFToken(_client) },
+            { "username", "username_edit" },
+            { "email", "edit_{user1.Email}" },
+        });
+
+        var response = await _client.PutAsync($"/users/{user.Id+1}", content);
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Fact]
     public async Task UserCanBeUpdatedWithJPEGAvatar()
     {
         User newUser;
