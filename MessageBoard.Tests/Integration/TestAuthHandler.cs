@@ -5,6 +5,8 @@ using Microsoft.Extensions.Options;
 using System.Security.Claims;
 using System.Text.Encodings.Web;
 
+namespace MessageBoard.Tests.Integration;
+
 public class TestAuthHandler : AuthenticationHandler<AuthenticationSchemeOptions>
 {
     public TestAuthHandler(IOptionsMonitor<AuthenticationSchemeOptions> options,

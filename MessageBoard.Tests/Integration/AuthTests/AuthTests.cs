@@ -6,7 +6,7 @@ using System.Net;
 
 using MessageBoard.Data;
 
-namespace MessageBoard.Tests.AuthTests;
+namespace MessageBoard.Tests.Integration.AuthTests;
 
 [Collection("Sync")]
 public class AuthTests : IClassFixture<WebApplicationFactory<Program>>

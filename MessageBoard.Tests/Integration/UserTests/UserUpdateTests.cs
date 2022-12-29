@@ -9,7 +9,7 @@ using System.Net.Http.Headers;
 using MessageBoard.Data;
 using MessageBoard.Models;
 
-namespace MessageBoard.Tests.UserTests;
+namespace MessageBoard.Tests.Integration.UserTests;
 
 [Collection("Sync")]
 public class UserUpdateTests : IClassFixture<CustomWebApplicationFactory<Program>>

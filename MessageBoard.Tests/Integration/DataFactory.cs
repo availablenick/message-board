@@ -3,7 +3,7 @@ using Bogus;
 using MessageBoard.Data;
 using MessageBoard.Models;
 
-namespace MessageBoard.Tests;
+namespace MessageBoard.Tests.Integration;
 
 public class DataFactory
 {

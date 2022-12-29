@@ -7,15 +7,15 @@ using System.Net.Http.Headers;
 using MessageBoard.Data;
 using MessageBoard.Models;
 
-namespace MessageBoard.Tests.PostTests;
+namespace MessageBoard.Tests.Integration.TopicTests;
 
 [Collection("Sync")]
-public class PostDeleteTests : IClassFixture<CustomWebApplicationFactory<Program>>
+public class TopicDeleteTests : IClassFixture<CustomWebApplicationFactory<Program>>
 {
     private readonly CustomWebApplicationFactory<Program> _factory;
     private readonly HttpClient _client;
 
-    public PostDeleteTests(CustomWebApplicationFactory<Program> factory)
+    public TopicDeleteTests(CustomWebApplicationFactory<Program> factory)
     {
         _factory = factory;
         _client = factory.CreateClient(new WebApplicationFactoryClientOptions
@@ -28,81 +28,79 @@ public class PostDeleteTests : IClassFixture<CustomWebApplicationFactory<Program
     }
 
     [Fact]
-    public async Task PostCanBeDeleted()
+    public async Task TopicCanBeDeleted()
     {
-        Post post;
+        Topic topic;
         using (var scope = _factory.Services.CreateScope())
         {
             var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
             dbContext.Database.EnsureDeleted();
             dbContext.Database.Migrate();
-            post = await DataFactory.CreatePost(dbContext);
+            topic = await DataFactory.CreateTopic(dbContext);
         }
 
-        _client.DefaultRequestHeaders.Add("UserId", post.Author.Id.ToString());
+        _client.DefaultRequestHeaders.Add("UserId", topic.Author.Id.ToString());
         _client.DefaultRequestHeaders.Add("X-XSRF-TOKEN", await Utilities.GetCSRFToken(_client));
-        var response = await _client.DeleteAsync($"/posts/{post.Id}");
+        var response = await _client.DeleteAsync($"/topics/{topic.Id}");
 
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
         using (var scope = _factory.Services.CreateScope())
         {
             var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
-            var postRecord = from p in dbContext.Posts
-                            where p.Id == post.Id
-                            select p;
+            var topicRecord = from t in dbContext.Topics
+                            where t.Id == topic.Id
+                            select t;
 
-            Assert.Null(postRecord.FirstOrDefault());
-            var freshUser = await dbContext.Users.Include(u => u.Posts).FirstAsync(u => u.Id == post.Author.Id);
-            var freshTopic = await dbContext.Topics.Include(t => t.Posts).FirstAsync(t => t.Id == post.Topic.Id);
-            Assert.Equal(0, freshUser.Posts.Count);
-            Assert.Equal(0, freshTopic.Posts.Count);
+            Assert.Null(topicRecord.FirstOrDefault());
+            var freshUser = await dbContext.Users.Include(u => u.Topics).FirstAsync(u => u.Id == topic.Author.Id);
+            Assert.Equal(0, freshUser.Topics.Count);
         }
     }
 
     [Fact]
-    public async Task PostCanOnlyBeDeletedByItsAuthor()
+    public async Task TopicCanOnlyBeDeletedByItsAuthor()
     {
         using var scope = _factory.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
         dbContext.Database.EnsureDeleted();
         dbContext.Database.Migrate();
         var user = await DataFactory.CreateUser(dbContext);
-        var newPost = await DataFactory.CreatePost(dbContext);
+        var topic = await DataFactory.CreateTopic(dbContext);
 
         _client.DefaultRequestHeaders.Add("UserId", user.Id.ToString());
         _client.DefaultRequestHeaders.Add("X-XSRF-TOKEN", await Utilities.GetCSRFToken(_client));
-        var response = await _client.DeleteAsync($"/posts/{newPost.Id}");
+        var response = await _client.DeleteAsync($"/topics/{topic.Id}");
 
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
-        var postRecord = from p in dbContext.Posts
-                        where p.Id == newPost.Id
-                        select p;
+        var topicRecord = from t in dbContext.Topics
+                        where t.Id == topic.Id
+                        select t;
 
-        Assert.NotNull(postRecord.FirstOrDefault());
+        Assert.NotNull(topicRecord.FirstOrDefault());
     }
 
     [Fact]
-    public async Task PostCannotBeDeletedByUnauthenticatedUser()
+    public async Task TopicCannotBeDeletedByUnauthenticatedUser()
     {
         using var scope = _factory.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
         dbContext.Database.EnsureDeleted();
         dbContext.Database.Migrate();
-        var newPost = await DataFactory.CreatePost(dbContext);
+        var topic = await DataFactory.CreateTopic(dbContext);
 
         _client.DefaultRequestHeaders.Remove("Authorization");
-        var response = await _client.DeleteAsync($"/posts/{newPost.Id}");
+        var response = await _client.DeleteAsync($"/topics/{topic.Id}");
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
-        var postRecord = from p in dbContext.Posts
-                        where p.Id == newPost.Id
-                        select p;
+        var topicRecord = from t in dbContext.Topics
+                        where t.Id == topic.Id
+                        select t;
 
-        Assert.NotNull(postRecord.FirstOrDefault());
+        Assert.NotNull(topicRecord.FirstOrDefault());
     }
 
     [Fact]
-    public async Task UserCannotDeleteNonExistentPost()
+    public async Task UserCannotDeleteNonExistentTopic()
     {
         using var scope = _factory.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
@@ -112,7 +110,7 @@ public class PostDeleteTests : IClassFixture<CustomWebApplicationFactory<Program
 
         _client.DefaultRequestHeaders.Add("UserId", user.Id.ToString());
         _client.DefaultRequestHeaders.Add("X-XSRF-TOKEN", await Utilities.GetCSRFToken(_client));
-        var response = await _client.DeleteAsync("/posts/1");
+        var response = await _client.DeleteAsync("/topics/1");
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
@@ -124,53 +122,42 @@ public class PostDeleteTests : IClassFixture<CustomWebApplicationFactory<Program
         var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
         dbContext.Database.EnsureDeleted();
         dbContext.Database.Migrate();
-        var newPost = await DataFactory.CreatePost(dbContext);
+        var topic = await DataFactory.CreateTopic(dbContext);
 
-        _client.DefaultRequestHeaders.Add("UserId", newPost.Author.Id.ToString());
-        var response = await _client.DeleteAsync($"/posts/{newPost.Id}");
+        _client.DefaultRequestHeaders.Add("UserId", topic.Author.Id.ToString());
+        var response = await _client.DeleteAsync($"/topics/{topic.Id}");
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        var postRecord = from p in dbContext.Posts
-                        where p.Id == newPost.Id
-                        select p;
+        var topicRecord = from t in dbContext.Topics
+                        where t.Id == topic.Id
+                        select t;
 
-        Assert.NotNull(postRecord.FirstOrDefault());
+        Assert.NotNull(topicRecord.FirstOrDefault());
     }
 
     [Fact]
     public async Task HTTPMethodOverrideCanBeUsed()
     {
-        Post post;
-        using (var scope = _factory.Services.CreateScope())
-        {
-            var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
-            dbContext.Database.EnsureDeleted();
-            dbContext.Database.Migrate();
-            post = await DataFactory.CreatePost(dbContext);
-        }
+        using var scope = _factory.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
+        dbContext.Database.EnsureDeleted();
+        dbContext.Database.Migrate();
+        var topic = await DataFactory.CreateTopic(dbContext);
 
-        _client.DefaultRequestHeaders.Add("UserId", post.Author.Id.ToString());
+        _client.DefaultRequestHeaders.Add("UserId", topic.Author.Id.ToString());
         var content = new FormUrlEncodedContent(new Dictionary<string, string>
         {
             { "_method", "DELETE" },
             { "_token", await Utilities.GetCSRFToken(_client) },
         });
 
-        var response = await _client.PostAsync($"/posts/{post.Id}", content);
+        var response = await _client.PostAsync($"/topics/{topic.Id}", content);
 
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
-        using (var scope = _factory.Services.CreateScope())
-        {
-            var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
-            var postRecord = from p in dbContext.Posts
-                            where p.Id == post.Id
-                            select p;
+        var topicRecord = from t in dbContext.Topics
+                        where t.Id == topic.Id
+                        select t;
 
-            Assert.Null(postRecord.FirstOrDefault());
-            var freshUser = await dbContext.Users.Include(u => u.Posts).FirstAsync(u => u.Id == post.Author.Id);
-            var freshTopic = await dbContext.Topics.Include(t => t.Posts).FirstAsync(t => t.Id == post.Topic.Id);
-            Assert.Equal(0, freshUser.Posts.Count);
-            Assert.Equal(0, freshTopic.Posts.Count);
-        }
+        Assert.Null(topicRecord.FirstOrDefault());
     }
 }

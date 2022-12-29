@@ -7,7 +7,7 @@ using System.Net.Http.Headers;
 using MessageBoard.Data;
 using MessageBoard.Models;
 
-namespace MessageBoard.Tests.TopicTests;
+namespace MessageBoard.Tests.Integration.TopicTests;
 
 [Collection("Sync")]
 public class TopicUpdateTests : IClassFixture<CustomWebApplicationFactory<Program>>

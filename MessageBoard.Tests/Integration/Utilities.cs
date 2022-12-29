@@ -1,4 +1,4 @@
-namespace MessageBoard.Tests;
+namespace MessageBoard.Tests.Integration;
 
 public class Utilities
 {

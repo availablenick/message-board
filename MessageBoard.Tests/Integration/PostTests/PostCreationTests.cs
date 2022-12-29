@@ -7,7 +7,7 @@ using System.Net.Http.Headers;
 using MessageBoard.Data;
 using MessageBoard.Models;
 
-namespace MessageBoard.Tests.PostTests;
+namespace MessageBoard.Tests.Integration.PostTests;
 
 [Collection("Sync")]
 public class PostCreationTests : IClassFixture<CustomWebApplicationFactory<Program>>
