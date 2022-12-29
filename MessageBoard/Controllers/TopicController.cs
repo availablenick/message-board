@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
+using MessageBoard.Auth;
 using MessageBoard.Data;
 using MessageBoard.Models;
 
@@ -38,7 +39,7 @@ public class TopicController : Controller
         {
             Title = topicDTO.Title,
             Content = topicDTO.Content,
-            Author = await GetAuthenticatedUser(),
+            Author = await UserHandler.GetAuthenticatedUser(User, _context),
             CreatedAt = now,
             UpdatedAt = now,
         };
@@ -102,7 +103,7 @@ public class TopicController : Controller
 
     private async Task<bool> IsActionAllowed(int topicId)
     {
-        var user = await GetAuthenticatedUser();
+        var user = await UserHandler.GetAuthenticatedUser(User, _context);
         if (user == null)
         {
             return false;
@@ -110,12 +111,5 @@ public class TopicController : Controller
     
         _context.Entry(user).Collection(u => u.Topics).Load();
         return user.Topics.Exists(t => t.Id == topicId);
-    }
-
-    private async Task<User> GetAuthenticatedUser()
-    {
-        Claim userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-        int id = Convert.ToInt32(userIdClaim.Value);
-        return await _context.Users.FindAsync(id);
     }
 }

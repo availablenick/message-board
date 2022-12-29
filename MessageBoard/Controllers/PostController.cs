@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 
+using MessageBoard.Auth;
 using MessageBoard.Data;
 using MessageBoard.Models;
 
@@ -33,7 +34,7 @@ public class PostController : Controller
             return UnprocessableEntity();
         }
 
-        var user = await GetAuthenticatedUser();
+        var user = await UserHandler.GetAuthenticatedUser(User, _context);
         var topic = await _context.Topics.FindAsync(topicId);
         var now = DateTime.Now;
         var post = new Post
@@ -103,7 +104,7 @@ public class PostController : Controller
 
     private async Task<bool> IsActionAllowed(int postId)
     {
-        var user = await GetAuthenticatedUser();
+        var user = await UserHandler.GetAuthenticatedUser(User, _context);
         if (user == null)
         {
             return false;
@@ -111,12 +112,5 @@ public class PostController : Controller
     
         _context.Entry(user).Collection(u => u.Posts).Load();
         return user.Posts.Exists(p => p.Id == postId);
-    }
-
-    private async Task<User> GetAuthenticatedUser()
-    {
-        Claim userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-        int id = Convert.ToInt32(userIdClaim.Value);
-        return await _context.Users.FindAsync(id);
     }
 }
