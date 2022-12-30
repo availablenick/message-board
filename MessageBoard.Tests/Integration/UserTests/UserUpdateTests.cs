@@ -1,31 +1,41 @@
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using System.Net;
 using System.Net.Http.Headers;
 
 using MessageBoard.Data;
+using MessageBoard.Filesystem;
 using MessageBoard.Models;
+using MessageBoard.Tests.Fakes;
 
 namespace MessageBoard.Tests.Integration.UserTests;
 
 [Collection("Sync")]
 public class UserUpdateTests : IClassFixture<CustomWebApplicationFactory<Program>>
 {
-    private readonly string _mainProjectPath;
+    private readonly string _projectPath;
     private readonly CustomWebApplicationFactory<Program> _factory;
     private readonly HttpClient _client;
 
     public UserUpdateTests(CustomWebApplicationFactory<Program> factory)
     {
-        _mainProjectPath = $"{Directory.GetParent(Directory.GetCurrentDirectory()).Parent.Parent.Parent.FullName}/MessageBoard/";
+        _projectPath = $"{Directory.GetParent(Directory.GetCurrentDirectory()).Parent.Parent.FullName}/";
         _factory = factory;
-        _client = factory.CreateClient(new WebApplicationFactoryClientOptions
-        {
-            AllowAutoRedirect = false,
-        });
+        _client = _factory.WithWebHostBuilder(builder =>
+            {
+                builder.ConfigureTestServices(services =>
+                {
+                    services.AddTransient<IFileHandler, FileHandlerStub>();
+                });
+            })
+            .CreateClient(new WebApplicationFactoryClientOptions
+            {
+                AllowAutoRedirect = false
+            });
 
         _client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Test");
@@ -344,7 +354,7 @@ public class UserUpdateTests : IClassFixture<CustomWebApplicationFactory<Program
 
             var user = userRecord.FirstOrDefault();
             Assert.NotNull(user);
-            string avatarPath = $"{_mainProjectPath}{user.Avatar}";
+            string avatarPath = $"{_projectPath}{user.Avatar}";
             Assert.True(File.Exists(avatarPath));
         }
     }
@@ -386,7 +396,7 @@ public class UserUpdateTests : IClassFixture<CustomWebApplicationFactory<Program
 
             var user = userRecord.FirstOrDefault();
             Assert.NotNull(user);
-            string avatarPath = $"{_mainProjectPath}{user.Avatar}";
+            string avatarPath = $"{_projectPath}{user.Avatar}";
             Assert.True(File.Exists(avatarPath));
         }
     }

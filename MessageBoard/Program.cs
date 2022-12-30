@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.EntityFrameworkCore;
 
 using MessageBoard.Data;
+using MessageBoard.Filesystem;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -28,6 +29,8 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.ReturnUrlParameter = "returnUrl";
         options.SlidingExpiration = true;
     });
+
+builder.Services.AddTransient<IFileHandler, FileHandler>();
 
 var app = builder.Build();
 

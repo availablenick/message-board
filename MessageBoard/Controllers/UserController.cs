@@ -6,6 +6,7 @@ using System.Security.Claims;
 
 using MessageBoard.Auth;
 using MessageBoard.Data;
+using MessageBoard.Filesystem;
 using MessageBoard.Models;
 
 namespace MessageBoard.Controllers;
@@ -30,13 +31,13 @@ public class UserController : Controller
         public IFormFile? Avatar { get; set; }
     }
 
+    private readonly IFileHandler _fileHandler;
     private readonly MessageBoardDbContext _context;
-    private readonly IWebHostEnvironment _env;
 
-    public UserController(MessageBoardDbContext context, IWebHostEnvironment env)
+    public UserController(IFileHandler fileHandler, MessageBoardDbContext context)
     {
+        _fileHandler = fileHandler;
         _context = context;
-        _env = env;
     }
 
     [HttpPost]
@@ -55,7 +56,7 @@ public class UserController : Controller
         var newUser = CreateUser(userDTO);
         if (userDTO.Avatar != null)
         {
-            newUser.Avatar = await StoreFile(userDTO.Avatar);
+            newUser.Avatar = _fileHandler.StoreFile(userDTO.Avatar);
         }
 
         await _context.Users.AddAsync(newUser);
@@ -90,7 +91,7 @@ public class UserController : Controller
         user.UpdatedAt = DateTime.Now;
         if (userDTO.Avatar != null)
         {
-            user.Avatar = await StoreFile(userDTO.Avatar);
+            user.Avatar = _fileHandler.StoreFile(userDTO.Avatar);
         }
 
         _context.Users.Update(user);
@@ -163,25 +164,6 @@ public class UserController : Controller
         }
 
         return true;
-    }
-
-    private async Task<string> StoreFile(IFormFile file)
-    {
-        string imageDirectory = $"{_env.ContentRootPath}Storage/Images";
-        if (!Directory.Exists(imageDirectory))
-        {
-            Directory.CreateDirectory(imageDirectory);
-        }
-
-        string fileExtension = Path.GetExtension(file.FileName).ToLowerInvariant();
-        string fileSubpath = $"Storage/Images/{Guid.NewGuid().ToString()}{fileExtension}";
-        string filepath = $"{_env.ContentRootPath}{fileSubpath}";
-        using (var fileStream = System.IO.File.Create(filepath))
-        {
-            await file.CopyToAsync(fileStream);
-        }
-
-        return fileSubpath;
     }
 
     private User CreateUser(UserCreationDTO userDTO)
