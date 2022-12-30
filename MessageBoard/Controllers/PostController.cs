@@ -57,13 +57,14 @@ public class PostController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Update(int id, PostDTO postDTO)
     {
-        var post = await _context.Posts.FindAsync(id);
+        var post = _context.Posts.Include(p => p.Author)
+            .FirstOrDefault(p => p.Id == id);
         if (post == null)
         {
             return NotFound();
         }
 
-        if (!(await IsActionAllowed(id)))
+        if (!ResourceHandler.IsAuthorized(User, post.Author.Id))
         {
             return Forbid();
         }
@@ -86,13 +87,14 @@ public class PostController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Delete(int id)
     {
-        var post = await _context.Posts.FindAsync(id);
+        var post = _context.Posts.Include(p => p.Author)
+            .FirstOrDefault(p => p.Id == id);
         if (post == null)
         {
             return NotFound();
         }
 
-        if (!(await IsActionAllowed(id)))
+        if (!ResourceHandler.IsAuthorized(User, post.Author.Id))
         {
             return Forbid();
         }
@@ -100,17 +102,5 @@ public class PostController : Controller
         _context.Posts.Remove(post);
         await _context.SaveChangesAsync();
         return NoContent();
-    }
-
-    private async Task<bool> IsActionAllowed(int postId)
-    {
-        var user = await UserHandler.GetAuthenticatedUser(User, _context);
-        if (user == null)
-        {
-            return false;
-        }
-    
-        _context.Entry(user).Collection(u => u.Posts).Load();
-        return user.Posts.Exists(p => p.Id == postId);
     }
 }

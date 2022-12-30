@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
 
+using MessageBoard.Auth;
 using MessageBoard.Data;
 using MessageBoard.Models;
 
@@ -74,7 +75,7 @@ public class UserController : Controller
             return NotFound();
         }
 
-        if (!ActionIsAllowed(id))
+        if (!ResourceHandler.IsAuthorized(User, id))
         {
             return Forbid();
         }
@@ -109,7 +110,7 @@ public class UserController : Controller
             return NotFound();
         }
 
-        if (!ActionIsAllowed(id))
+        if (!ResourceHandler.IsAuthorized(User, id))
         {
             return Forbid();
         }
@@ -120,17 +121,6 @@ public class UserController : Controller
         return NoContent();
     }
 
-    private bool ActionIsAllowed(int id)
-    {
-        Claim userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-        if (userIdClaim == null || userIdClaim.Value != id.ToString())
-        {
-            return false;
-        }
-
-        return true;
-    }
-
     private bool DataIsValid(string username, string email, IFormFile? avatar, int? id = null)
     {
         if (!ModelState.IsValid)
@@ -138,22 +128,16 @@ public class UserController : Controller
             return false;
         }
 
-        var user = _context.Users.Where(u => u.Username == username).FirstOrDefault();
+        var user = _context.Users.Where(u => u.Username == username && u.Id != id).FirstOrDefault();
         if (user != null)
         {
-            if (id == null || id != user.Id)
-            {
-                return false;
-            }
+            return false;
         }
 
-        user = _context.Users.Where(u => u.Email == email).FirstOrDefault();
+        user = _context.Users.Where(u => u.Email == email && u.Id != id).FirstOrDefault();
         if (user != null)
         {
-            if (id == null || id != user.Id)
-            {
-                return false;
-            }
+            return false;
         }
 
         if (!FileIsValid(avatar))

@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 
 using MessageBoard.Auth;
@@ -55,13 +56,14 @@ public class TopicController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Update(int id, TopicDTO topicDTO)
     {
-        var topic = await _context.Topics.FindAsync(id);
+        var topic = _context.Topics.Include(t => t.Author)
+            .FirstOrDefault(t => t.Id == id);
         if (topic == null)
         {
             return NotFound();
         }
 
-        if (!(await IsActionAllowed(id)))
+        if (!ResourceHandler.IsAuthorized(User, topic.Author.Id))
         {
             return Forbid();
         }
@@ -85,13 +87,14 @@ public class TopicController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Delete(int id)
     {
-        var topic = await _context.Topics.FindAsync(id);
+        var topic = _context.Topics.Include(t => t.Author)
+            .FirstOrDefault(t => t.Id == id);
         if (topic == null)
         {
             return NotFound();
         }
 
-        if (!(await IsActionAllowed(id)))
+        if (!ResourceHandler.IsAuthorized(User, topic.Author.Id))
         {
             return Forbid();
         }
@@ -99,17 +102,5 @@ public class TopicController : Controller
         _context.Topics.Remove(topic);
         await _context.SaveChangesAsync();
         return NoContent();
-    }
-
-    private async Task<bool> IsActionAllowed(int topicId)
-    {
-        var user = await UserHandler.GetAuthenticatedUser(User, _context);
-        if (user == null)
-        {
-            return false;
-        }
-    
-        _context.Entry(user).Collection(u => u.Topics).Load();
-        return user.Topics.Exists(t => t.Id == topicId);
     }
 }
