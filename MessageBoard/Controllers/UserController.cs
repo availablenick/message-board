@@ -17,8 +17,6 @@ public class UserController : Controller
     public class UserCreationDTO
     {
         public string Username { get; set; }
-
-        [EmailAddress]
         public string Email { get; set; }
         public string Password { get; set; }
         public IFormFile? Avatar { get; set; }
@@ -48,12 +46,14 @@ public class UserController : Controller
             return Redirect("/");
         }
 
-        if (!DataIsValid(userDTO.Username, userDTO.Email, userDTO.Avatar))
+        if (!MessageBoard.Models.User.DataIsValidForCreation(userDTO.Username,
+                userDTO.Email, userDTO.Password, userDTO.Avatar?.FileName) ||
+            !DataIsUnique(userDTO.Username, userDTO.Email))
         {
             return UnprocessableEntity();
         }
 
-        var newUser = CreateUser(userDTO);
+        var newUser = MakeUser(userDTO);
         if (userDTO.Avatar != null)
         {
             newUser.Avatar = _fileHandler.StoreFile(userDTO.Avatar);
@@ -81,7 +81,9 @@ public class UserController : Controller
             return Forbid();
         }
 
-        if (!DataIsValid(userDTO.Username, userDTO.Email, userDTO.Avatar, id))
+        if (!MessageBoard.Models.User.DataIsValidForUpdate(userDTO.Username,
+                userDTO.Email, userDTO.Avatar?.FileName) ||
+            !DataIsUnique(userDTO.Username, userDTO.Email, id))
         {
             return UnprocessableEntity();
         }
@@ -122,26 +124,16 @@ public class UserController : Controller
         return NoContent();
     }
 
-    private bool DataIsValid(string username, string email, IFormFile? avatar, int? id = null)
+    private bool DataIsUnique(string username, string email, int? userId = null)
     {
-        if (!ModelState.IsValid)
-        {
-            return false;
-        }
-
-        var user = _context.Users.Where(u => u.Username == username && u.Id != id).FirstOrDefault();
+        var user = _context.Users.Where(u => u.Username == username && u.Id != userId).FirstOrDefault();
         if (user != null)
         {
             return false;
         }
 
-        user = _context.Users.Where(u => u.Email == email && u.Id != id).FirstOrDefault();
+        user = _context.Users.Where(u => u.Email == email && u.Id != userId).FirstOrDefault();
         if (user != null)
-        {
-            return false;
-        }
-
-        if (!FileIsValid(avatar))
         {
             return false;
         }
@@ -149,29 +141,12 @@ public class UserController : Controller
         return true;
     }
 
-    private bool FileIsValid(IFormFile file)
-    {
-        if (file == null)
-        {
-            return true;
-        }
-
-        string[] allowedExtensions = new string[] { ".jpg", ".jpeg", ".png" };
-        string extension = Path.GetExtension(file.FileName).ToLowerInvariant();
-        if (string.IsNullOrEmpty(extension) || !allowedExtensions.Contains(extension))
-        {
-            return false;
-        }
-
-        return true;
-    }
-
-    private User CreateUser(UserCreationDTO userDTO)
+    private User MakeUser(UserCreationDTO userDTO)
     {
         var passwordHasher = new PasswordHasher<User>();
         var user = new User { Username = userDTO.Username, Email = userDTO.Email };
         user.PasswordHash = passwordHasher.HashPassword(user, userDTO.Password);
-
+        user.IsDeleted = false;
         var now = DateTime.Now;
         user.CreatedAt = now;
         user.UpdatedAt = now;
