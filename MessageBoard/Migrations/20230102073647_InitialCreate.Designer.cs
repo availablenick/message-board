@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MessageBoard.Migrations
 {
     [DbContext(typeof(MessageBoardDbContext))]
-    [Migration("20221226092013_InitialCreate")]
+    [Migration("20230102073647_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -25,16 +25,13 @@ namespace MessageBoard.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("MessageBoard.Models.Post", b =>
+            modelBuilder.Entity("MessageBoard.Models.Rateable", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int?>("AuthorId")
-                        .HasColumnType("int");
 
                     b.Property<string>("Content")
                         .IsRequired()
@@ -43,22 +40,17 @@ namespace MessageBoard.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("TopicId")
-                        .HasColumnType("int");
-
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("AuthorId");
+                    b.ToTable("Rateables");
 
-                    b.HasIndex("TopicId");
-
-                    b.ToTable("Posts");
+                    b.UseTptMappingStrategy();
                 });
 
-            modelBuilder.Entity("MessageBoard.Models.Topic", b =>
+            modelBuilder.Entity("MessageBoard.Models.Rating", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -66,28 +58,28 @@ namespace MessageBoard.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("AuthorId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Content")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int>("OwnerId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TargetId")
+                        .HasColumnType("int");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<int>("Value")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
 
-                    b.HasIndex("AuthorId");
+                    b.HasIndex("OwnerId");
 
-                    b.ToTable("Topics");
+                    b.HasIndex("TargetId");
+
+                    b.ToTable("Ratings");
                 });
 
             modelBuilder.Entity("MessageBoard.Models.User", b =>
@@ -135,15 +127,71 @@ namespace MessageBoard.Migrations
 
             modelBuilder.Entity("MessageBoard.Models.Post", b =>
                 {
+                    b.HasBaseType("MessageBoard.Models.Rateable");
+
+                    b.Property<int?>("AuthorId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("TopicId")
+                        .HasColumnType("int");
+
+                    b.HasIndex("AuthorId");
+
+                    b.HasIndex("TopicId");
+
+                    b.ToTable("Posts");
+                });
+
+            modelBuilder.Entity("MessageBoard.Models.Topic", b =>
+                {
+                    b.HasBaseType("MessageBoard.Models.Rateable");
+
+                    b.Property<int?>("AuthorId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasIndex("AuthorId");
+
+                    b.ToTable("Topics");
+                });
+
+            modelBuilder.Entity("MessageBoard.Models.Rating", b =>
+                {
+                    b.HasOne("MessageBoard.Models.User", "Owner")
+                        .WithMany("Ratings")
+                        .HasForeignKey("OwnerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("MessageBoard.Models.Rateable", "Target")
+                        .WithMany("Ratings")
+                        .HasForeignKey("TargetId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Owner");
+
+                    b.Navigation("Target");
+                });
+
+            modelBuilder.Entity("MessageBoard.Models.Post", b =>
+                {
                     b.HasOne("MessageBoard.Models.User", "Author")
                         .WithMany("Posts")
                         .HasForeignKey("AuthorId");
 
-                    b.HasOne("MessageBoard.Models.Topic", "Topic")
-                        .WithMany("Posts")
-                        .HasForeignKey("TopicId")
+                    b.HasOne("MessageBoard.Models.Rateable", null)
+                        .WithOne()
+                        .HasForeignKey("MessageBoard.Models.Post", "Id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.HasOne("MessageBoard.Models.Topic", "Topic")
+                        .WithMany("Posts")
+                        .HasForeignKey("TopicId");
 
                     b.Navigation("Author");
 
@@ -154,23 +202,34 @@ namespace MessageBoard.Migrations
                 {
                     b.HasOne("MessageBoard.Models.User", "Author")
                         .WithMany("Topics")
-                        .HasForeignKey("AuthorId")
+                        .HasForeignKey("AuthorId");
+
+                    b.HasOne("MessageBoard.Models.Rateable", null)
+                        .WithOne()
+                        .HasForeignKey("MessageBoard.Models.Topic", "Id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Author");
                 });
 
-            modelBuilder.Entity("MessageBoard.Models.Topic", b =>
+            modelBuilder.Entity("MessageBoard.Models.Rateable", b =>
                 {
-                    b.Navigation("Posts");
+                    b.Navigation("Ratings");
                 });
 
             modelBuilder.Entity("MessageBoard.Models.User", b =>
                 {
                     b.Navigation("Posts");
 
+                    b.Navigation("Ratings");
+
                     b.Navigation("Topics");
+                });
+
+            modelBuilder.Entity("MessageBoard.Models.Topic", b =>
+                {
+                    b.Navigation("Posts");
                 });
 #pragma warning restore 612, 618
         }

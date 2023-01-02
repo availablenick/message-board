@@ -14,6 +14,7 @@ public class User
     public DateTime UpdatedAt { get; set; }
     public List<Topic> Topics { get; set; }
     public List<Post> Posts { get; set; }
+    public List<Rating> Ratings { get; set; }
 
     public static bool DataIsValidForCreation(string username, string email,
         string password, string avatarFilename)
