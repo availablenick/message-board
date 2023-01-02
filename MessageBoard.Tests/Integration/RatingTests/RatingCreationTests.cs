@@ -36,7 +36,7 @@ public class RatingCreationTests : IClassFixture<CustomWebApplicationFactory<Pro
         var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
         dbContext.Database.EnsureDeleted();
         dbContext.Database.Migrate();
-        var topic = await DataFactory.CreatePost(dbContext);
+        var topic = await DataFactory.CreateTopic(dbContext);
 
         _client.DefaultRequestHeaders.Add("UserId", topic.Author.Id.ToString());
         var content = new FormUrlEncodedContent(new Dictionary<string, string>
