@@ -8,6 +8,8 @@ using MessageBoard.Models;
 
 namespace MessageBoard.Controllers;
 
+[Authorize]
+[ValidateAntiForgeryToken]
 public class PostController : Controller
 {
     public class PostDTO
@@ -24,8 +26,6 @@ public class PostController : Controller
 
     [HttpPost]
     [Route("topics/{topicId}/posts")]
-    [Authorize]
-    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(int topicId, PostDTO postDTO)
     {
         if (!ModelState.IsValid)
@@ -52,8 +52,6 @@ public class PostController : Controller
 
     [HttpPut]
     [Route("posts/{id}")]
-    [Authorize]
-    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Update(int id, PostDTO postDTO)
     {
         var post = _context.Posts.Include(p => p.Author)
@@ -82,8 +80,6 @@ public class PostController : Controller
 
     [HttpDelete]
     [Route("posts/{id}")]
-    [Authorize]
-    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Delete(int id)
     {
         var post = _context.Posts.Include(p => p.Author)

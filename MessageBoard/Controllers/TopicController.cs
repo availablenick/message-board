@@ -9,6 +9,8 @@ using MessageBoard.Models;
 namespace MessageBoard.Controllers;
 
 [Route("topics")]
+[Authorize]
+[ValidateAntiForgeryToken]
 public class TopicController : Controller
 {
     public class TopicDTO
@@ -25,8 +27,6 @@ public class TopicController : Controller
     }
 
     [HttpPost]
-    [Authorize]
-    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(TopicDTO topicDTO)
     {
         if (!ModelState.IsValid)
@@ -51,8 +51,6 @@ public class TopicController : Controller
 
     [HttpPut]
     [Route("{id}")]
-    [Authorize]
-    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Update(int id, TopicDTO topicDTO)
     {
         var topic = _context.Topics.Include(t => t.Author)
@@ -82,8 +80,6 @@ public class TopicController : Controller
 
     [HttpDelete]
     [Route("{id}")]
-    [Authorize]
-    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Delete(int id)
     {
         var topic = _context.Topics.Include(t => t.Author)
