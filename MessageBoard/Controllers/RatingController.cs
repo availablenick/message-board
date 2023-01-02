@@ -9,6 +9,8 @@ using MessageBoard.Models;
 namespace MessageBoard.Controllers;
 
 [Route("ratings")]
+[Authorize]
+[ValidateAntiForgeryToken]
 public class RatingController : Controller
 {
     public class RatingDTO
@@ -25,8 +27,6 @@ public class RatingController : Controller
     }
 
     [HttpPost]
-    [Authorize]
-    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(int targetId, RatingDTO ratingDTO)
     {
         var rating = await MakeRating(targetId, ratingDTO);
@@ -36,6 +36,62 @@ public class RatingController : Controller
         }
 
         await _context.Ratings.AddAsync(rating);
+        await _context.SaveChangesAsync();
+        return NoContent();
+    }
+
+    [HttpPut]
+    [Route("{id}")]
+    public async Task<IActionResult> Update(int id, int value)
+    {
+        var rating = await _context.Ratings.FindAsync(id);
+        if (rating == null)
+        {
+            return NotFound();
+        }
+
+        _context.Entry(rating)
+            .Reference(r => r.Owner)
+            .Load();
+
+        if (!ResourceHandler.IsAuthorized(User, rating.Owner.Id))
+        {
+            return Forbid();
+        }
+
+        rating.Value = value;
+        rating.UpdatedAt = DateTime.Now;
+        _context.Entry(rating)
+            .Reference(r => r.Target)
+            .Load();
+
+        if (!rating.IsValid())
+        {
+            return UnprocessableEntity();
+        }
+
+        _context.Ratings.Update(rating);
+        await _context.SaveChangesAsync();
+        return NoContent();
+    }
+
+    [HttpDelete]
+    [Route("{id}")]
+    public async Task<IActionResult> Delete(int id)
+    {
+        var rating = await _context.Ratings.FindAsync(id);
+        if (rating == null)
+        {
+            return NotFound();
+        }
+
+        _context.Entry(rating).Reference(r => r.Owner).Load();
+        if (!ResourceHandler.IsAuthorized(User, rating.Owner.Id))
+        {
+            return Forbid();
+        }
+
+        _context.Ratings.Remove(rating);
         await _context.SaveChangesAsync();
         return NoContent();
     }

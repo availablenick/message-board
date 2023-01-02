@@ -63,4 +63,24 @@ public class DataFactory
 
         return post;
     }
+
+    public static async Task<Rating> CreateRating(int value,
+        MessageBoardDbContext dbContext)
+    {
+        var now = DateTime.Now;
+        var post = await CreatePost(dbContext);
+        var rating = new Rating
+        {
+            Value = value,
+            CreatedAt = now,
+            UpdatedAt = now,
+            Owner = post.Author,
+            Target = post,
+        };
+
+        await dbContext.Ratings.AddAsync(rating);
+        await dbContext.SaveChangesAsync();
+
+        return rating;
+    }
 }
