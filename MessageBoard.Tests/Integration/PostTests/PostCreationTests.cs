@@ -81,11 +81,7 @@ public class PostCreationTests : IClassFixture<CustomWebApplicationFactory<Progr
         var response = await _client.PostAsync($"/topics/{topic.Id}/posts", content);
 
         Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
-        var postRecord = from p in dbContext.Posts
-                        where p.Content == "test_content"
-                        select p;
-
-        Assert.Null(postRecord.FirstOrDefault());
+        Assert.Equal(0, await dbContext.Posts.CountAsync());
     }
 
     [Fact]
@@ -106,11 +102,7 @@ public class PostCreationTests : IClassFixture<CustomWebApplicationFactory<Progr
         var response = await _client.PostAsync($"/topics/{topic.Id}/posts", content);
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
-        var postRecord = from p in dbContext.Posts
-                        where p.Content == "test_content"
-                        select p;
-
-        Assert.Null(postRecord.FirstOrDefault());
+        Assert.Equal(0, await dbContext.Posts.CountAsync());
     }
 
     [Fact]
@@ -131,10 +123,6 @@ public class PostCreationTests : IClassFixture<CustomWebApplicationFactory<Progr
         var response = await _client.PostAsync($"/topics/{topic.Id}/posts", content);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        var postRecord = from p in dbContext.Posts
-                        where p.Content == "test_content"
-                        select p;
-
-        Assert.Null(postRecord.FirstOrDefault());
+        Assert.Equal(0, await dbContext.Posts.CountAsync());
     }
 }
