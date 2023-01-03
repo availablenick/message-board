@@ -38,6 +38,30 @@ public class SectionController : Controller
         return NoContent();
     }
 
+    [HttpPut]
+    [Route("{id}")]
+    [Authorize(Roles = "Moderator")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Update(int id, string name)
+    {
+        var section = await _context.Sections.FindAsync(id);
+        if (section == null)
+        {
+            return NotFound();
+        }
+
+        section.Name = name;
+        section.UpdatedAt = DateTime.Now;
+        if (!section.IsValid())
+        {
+            return UnprocessableEntity();
+        }
+
+        _context.Sections.Update(section);
+        await _context.SaveChangesAsync();
+        return NoContent();
+    }
+
     private async Task<Section> MakeSection(string name)
     {
         var now = DateTime.Now;
