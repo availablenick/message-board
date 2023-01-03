@@ -54,8 +54,8 @@ public class RatingDeleteTests : IClassFixture<CustomWebApplicationFactory<Progr
             var freshTarget = await dbContext.Rateables.Include(r => r.Ratings)
                 .FirstAsync(r => r.Id == rating.Target.Id);
 
-            Assert.Equal(0, freshOwner.Ratings.Count);
-            Assert.Equal(0, freshTarget.Ratings.Count);
+            Assert.Empty(freshOwner.Ratings);
+            Assert.Empty(freshTarget.Ratings);
         }
     }
 
@@ -157,8 +157,8 @@ public class RatingDeleteTests : IClassFixture<CustomWebApplicationFactory<Progr
             var freshTarget = await dbContext.Rateables.Include(r => r.Ratings)
                 .FirstAsync(r => r.Id == rating.Target.Id);
 
-            Assert.Equal(0, freshOwner.Ratings.Count);
-            Assert.Equal(0, freshTarget.Ratings.Count);
+            Assert.Empty(freshOwner.Ratings);
+            Assert.Empty(freshTarget.Ratings);
         }
     }
 }

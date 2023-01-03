@@ -54,8 +54,8 @@ public class PostDeleteTests : IClassFixture<CustomWebApplicationFactory<Program
             Assert.Null(postRecord.FirstOrDefault());
             var freshUser = await dbContext.Users.Include(u => u.Posts).FirstAsync(u => u.Id == post.Author.Id);
             var freshTopic = await dbContext.Topics.Include(t => t.Posts).FirstAsync(t => t.Id == post.Topic.Id);
-            Assert.Equal(0, freshUser.Posts.Count);
-            Assert.Equal(0, freshTopic.Posts.Count);
+            Assert.Empty(freshUser.Posts);
+            Assert.Empty(freshTopic.Posts);
         }
     }
 
@@ -169,8 +169,8 @@ public class PostDeleteTests : IClassFixture<CustomWebApplicationFactory<Program
             Assert.Null(postRecord.FirstOrDefault());
             var freshUser = await dbContext.Users.Include(u => u.Posts).FirstAsync(u => u.Id == post.Author.Id);
             var freshTopic = await dbContext.Topics.Include(t => t.Posts).FirstAsync(t => t.Id == post.Topic.Id);
-            Assert.Equal(0, freshUser.Posts.Count);
-            Assert.Equal(0, freshTopic.Posts.Count);
+            Assert.Empty(freshUser.Posts);
+            Assert.Empty(freshTopic.Posts);
         }
     }
 }

@@ -53,7 +53,7 @@ public class TopicDeleteTests : IClassFixture<CustomWebApplicationFactory<Progra
 
             Assert.Null(topicRecord.FirstOrDefault());
             var freshUser = await dbContext.Users.Include(u => u.Topics).FirstAsync(u => u.Id == topic.Author.Id);
-            Assert.Equal(0, freshUser.Topics.Count);
+            Assert.Empty(freshUser.Topics);
         }
     }
 
