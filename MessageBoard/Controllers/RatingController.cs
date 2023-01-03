@@ -27,9 +27,9 @@ public class RatingController : Controller
     }
 
     [HttpPost]
-    public async Task<IActionResult> Create(int targetId, RatingDTO ratingDTO)
+    public async Task<IActionResult> Create(RatingDTO ratingDTO)
     {
-        var rating = await MakeRating(targetId, ratingDTO);
+        var rating = await MakeRating(ratingDTO);
         if (!rating.IsValid())
         {
             return UnprocessableEntity();
@@ -96,10 +96,10 @@ public class RatingController : Controller
         return NoContent();
     }
 
-    private async Task<Rating> MakeRating(int targetId, RatingDTO ratingDTO)
+    private async Task<Rating> MakeRating(RatingDTO ratingDTO)
     {
         var user = await UserHandler.GetAuthenticatedUser(User, _context);
-        var target = await _context.Rateables.FindAsync(targetId);
+        var target = await _context.Rateables.FindAsync(ratingDTO.TargetId);
         var now = DateTime.Now;
         var rating = new Rating
         {
