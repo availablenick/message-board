@@ -8,4 +8,5 @@ public abstract class Rateable
     public DateTime UpdatedAt { get; set; }
     public User? Author { get; set; }
     public List<Rating> Ratings { get; set; }
+    public List<Complaint> Complaints { get; set; }
 }

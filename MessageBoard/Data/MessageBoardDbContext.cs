@@ -11,6 +11,7 @@ public class MessageBoardDbContext : DbContext
     public DbSet<Post> Posts { get; set; }
     public DbSet<Rateable> Rateables { get; set; }
     public DbSet<Rating> Ratings { get; set; }
+    public DbSet<Complaint> Complaints { get; set; }
 
     public MessageBoardDbContext(DbContextOptions<MessageBoardDbContext> options)
         : base(options)

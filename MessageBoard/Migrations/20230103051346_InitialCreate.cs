@@ -46,6 +46,34 @@ namespace MessageBoard.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Complaints",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Reason = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    AuthorId = table.Column<int>(type: "int", nullable: true),
+                    TargetId = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Complaints", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Complaints_Rateables_TargetId",
+                        column: x => x.TargetId,
+                        principalTable: "Rateables",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Complaints_Users_AuthorId",
+                        column: x => x.AuthorId,
+                        principalTable: "Users",
+                        principalColumn: "Id");
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Ratings",
                 columns: table => new
                 {
@@ -128,6 +156,16 @@ namespace MessageBoard.Migrations
                 });
 
             migrationBuilder.CreateIndex(
+                name: "IX_Complaints_AuthorId",
+                table: "Complaints",
+                column: "AuthorId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Complaints_TargetId",
+                table: "Complaints",
+                column: "TargetId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Posts_AuthorId",
                 table: "Posts",
                 column: "AuthorId");
@@ -168,6 +206,9 @@ namespace MessageBoard.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropTable(
+                name: "Complaints");
+
             migrationBuilder.DropTable(
                 name: "Posts");
 

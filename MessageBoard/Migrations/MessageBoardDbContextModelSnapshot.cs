@@ -22,6 +22,39 @@ namespace MessageBoard.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("MessageBoard.Models.Complaint", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("AuthorId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("TargetId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AuthorId");
+
+                    b.HasIndex("TargetId");
+
+                    b.ToTable("Complaints");
+                });
+
             modelBuilder.Entity("MessageBoard.Models.Rateable", b =>
                 {
                     b.Property<int>("Id")
@@ -155,6 +188,23 @@ namespace MessageBoard.Migrations
                     b.ToTable("Topics");
                 });
 
+            modelBuilder.Entity("MessageBoard.Models.Complaint", b =>
+                {
+                    b.HasOne("MessageBoard.Models.User", "Author")
+                        .WithMany("Complaints")
+                        .HasForeignKey("AuthorId");
+
+                    b.HasOne("MessageBoard.Models.Rateable", "Target")
+                        .WithMany("Complaints")
+                        .HasForeignKey("TargetId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Author");
+
+                    b.Navigation("Target");
+                });
+
             modelBuilder.Entity("MessageBoard.Models.Rating", b =>
                 {
                     b.HasOne("MessageBoard.Models.User", "Owner")
@@ -212,11 +262,15 @@ namespace MessageBoard.Migrations
 
             modelBuilder.Entity("MessageBoard.Models.Rateable", b =>
                 {
+                    b.Navigation("Complaints");
+
                     b.Navigation("Ratings");
                 });
 
             modelBuilder.Entity("MessageBoard.Models.User", b =>
                 {
+                    b.Navigation("Complaints");
+
                     b.Navigation("Posts");
 
                     b.Navigation("Ratings");
