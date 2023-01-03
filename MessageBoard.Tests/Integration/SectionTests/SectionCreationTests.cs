@@ -7,15 +7,15 @@ using System.Net.Http.Headers;
 using MessageBoard.Data;
 using MessageBoard.Models;
 
-namespace MessageBoard.Tests.Integration.TopicTests;
+namespace MessageBoard.Tests.Integration.SectionTests;
 
 [Collection("Sync")]
-public class TopicCreationTests : IClassFixture<CustomWebApplicationFactory<Program>>
+public class SectionCreationTests : IClassFixture<CustomWebApplicationFactory<Program>>
 {
     private readonly CustomWebApplicationFactory<Program> _factory;
     private readonly HttpClient _client;
 
-    public TopicCreationTests(CustomWebApplicationFactory<Program> factory)
+    public SectionCreationTests(CustomWebApplicationFactory<Program> factory)
     {
         _factory = factory;
         _client = factory.CreateClient(new WebApplicationFactoryClientOptions
@@ -28,69 +28,58 @@ public class TopicCreationTests : IClassFixture<CustomWebApplicationFactory<Prog
     }
 
     [Fact]
-    public async Task TopicCanBeCreated()
+    public async Task SectionCanBeCreated()
     {
         using var scope = _factory.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
         dbContext.Database.EnsureDeleted();
         dbContext.Database.Migrate();
         var user = await DataFactory.CreateUser(dbContext);
-        var section = await DataFactory.CreateSection(dbContext);
 
         _client.DefaultRequestHeaders.Add("UserId", user.Id.ToString());
+        _client.DefaultRequestHeaders.Add("Role", "Moderator");
         var content = new FormUrlEncodedContent(new Dictionary<string, string>
         {
             { "_token", await Utilities.GetCSRFToken(_client) },
-            { "title", "test_title" },
-            { "content", "test_content" },
+            { "name", "test_section" },
         });
 
         DateTime timeBeforeResponse = DateTime.Now;
-        var response = await _client.PostAsync($"/sections/{section.Id}/topics", content);
+        var response = await _client.PostAsync("/sections", content);
         DateTime timeAfterResponse = DateTime.Now;
 
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
-        var topicRecord = from t in dbContext.Topics
-                        where t.Title == "test_title" &&
-                                t.Content == "test_content"
-                        select t;
-
-        var topic = topicRecord.FirstOrDefault();
-        Assert.NotNull(topic);
-        Assert.Equal(user.Id, topic.Author.Id);
-        Assert.Equal(section.Id, topic.Section.Id);
-        Assert.True(user.Topics.Exists(t => t.Id == topic.Id));
-        Assert.True(section.Topics.Exists(t => t.Id == topic.Id));
-        Assert.True(topic.CreatedAt.CompareTo(timeBeforeResponse) >= 0);
-        Assert.True(topic.CreatedAt.CompareTo(timeAfterResponse) <= 0);
-        Assert.True(topic.CreatedAt.CompareTo(topic.UpdatedAt) == 0);
+        var section = dbContext.Sections.FirstOrDefault(s => s.Name == "test_section");
+        Assert.NotNull(section);
+        Assert.True(section.CreatedAt.CompareTo(timeBeforeResponse) >= 0);
+        Assert.True(section.CreatedAt.CompareTo(timeAfterResponse) <= 0);
+        Assert.True(section.CreatedAt.CompareTo(section.UpdatedAt) == 0);
     }
 
     [Fact]
-    public async Task TopicCannotBeCreatedWithoutTitle()
+    public async Task SectionCannotBeCreatedWithoutName()
     {
         using var scope = _factory.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
         dbContext.Database.EnsureDeleted();
         dbContext.Database.Migrate();
         var user = await DataFactory.CreateUser(dbContext);
-        var section = await DataFactory.CreateSection(dbContext);
 
         _client.DefaultRequestHeaders.Add("UserId", user.Id.ToString());
+        _client.DefaultRequestHeaders.Add("Role", "Moderator");
         var content = new FormUrlEncodedContent(new Dictionary<string, string>
         {
             { "_token", await Utilities.GetCSRFToken(_client) },
-            { "content", "test_content" },
         });
 
-        var response = await _client.PostAsync($"sections/{section.Id}/topics", content);
+        var response = await _client.PostAsync("/sections", content);
 
         Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
-        Assert.Equal(0, await dbContext.Topics.CountAsync());
+        Assert.Equal(0, await dbContext.Sections.CountAsync());
     }
 
     [Fact]
-    public async Task TopicCannotBeCreatedWithoutContent()
+    public async Task SectionCannotBeCreatedWithExistingName()
     {
         using var scope = _factory.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
@@ -100,66 +89,59 @@ public class TopicCreationTests : IClassFixture<CustomWebApplicationFactory<Prog
         var section = await DataFactory.CreateSection(dbContext);
 
         _client.DefaultRequestHeaders.Add("UserId", user.Id.ToString());
+        _client.DefaultRequestHeaders.Add("Role", "Moderator");
         var content = new FormUrlEncodedContent(new Dictionary<string, string>
         {
             { "_token", await Utilities.GetCSRFToken(_client) },
-            { "title", "test_title" },
+            { "name", section.Name },
         });
 
-        var response = await _client.PostAsync($"sections/{section.Id}/topics", content);
+        var response = await _client.PostAsync("/sections", content);
 
         Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
-        Assert.Equal(0, await dbContext.Topics.CountAsync());
+        Assert.Equal(1, await dbContext.Sections.CountAsync());
     }
 
     [Fact]
-    public async Task TopicCannotBeCreatedInNonExistentSection()
+    public async Task SectionCannotBeCreatedByUnauthenticatedUser()
     {
         using var scope = _factory.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
         dbContext.Database.EnsureDeleted();
         dbContext.Database.Migrate();
-        var user = await DataFactory.CreateUser(dbContext);
-
-        _client.DefaultRequestHeaders.Add("UserId", user.Id.ToString());
-        var content = new FormUrlEncodedContent(new Dictionary<string, string>
-        {
-            { "_token", await Utilities.GetCSRFToken(_client) },
-            { "title", "test_title" },
-            { "content", "test_content" },
-        });
-
-        var response = await _client.PostAsync("/sections/1/topics", content);
-
-        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
-        Assert.Equal(0, await dbContext.Topics.CountAsync());
-    }
-
-    [Fact]
-    public async Task TopicCannotBeCreatedByUnauthenticatedUser()
-    {
-        using var scope = _factory.Services.CreateScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
-        dbContext.Database.EnsureDeleted();
-        dbContext.Database.Migrate();
-        var section = await DataFactory.CreateSection(dbContext);
 
         _client.DefaultRequestHeaders.Remove("Authorization");
         var content = new FormUrlEncodedContent(new Dictionary<string, string>
         {
-            { "title", "test_title" },
-            { "content", "test_content" },
+            { "name", "test_section" },
         });
 
-        var response = await _client.PostAsync($"sections/{section.Id}/topics", content);
+        var response = await _client.PostAsync("/sections", content);
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
-        var topicRecord = from t in dbContext.Topics
-                        where t.Title == "test_title" &&
-                                t.Content == "test_content"
-                        select t;
+        Assert.Equal(0, await dbContext.Sections.CountAsync());
+    }
 
-        Assert.Null(topicRecord.FirstOrDefault());
+    [Fact]
+    public async Task SectionCannotBeCreatedByRegularUser()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
+        dbContext.Database.EnsureDeleted();
+        dbContext.Database.Migrate();
+        var user = await DataFactory.CreateUser(dbContext);
+
+        _client.DefaultRequestHeaders.Add("UserId", user.Id.ToString());
+        var content = new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            { "_token", await Utilities.GetCSRFToken(_client) },
+            { "name", "test_section" },
+        });
+
+        var response = await _client.PostAsync("/sections", content);
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        Assert.Equal(0, await dbContext.Sections.CountAsync());
     }
 
     [Fact]
@@ -170,23 +152,17 @@ public class TopicCreationTests : IClassFixture<CustomWebApplicationFactory<Prog
         dbContext.Database.EnsureDeleted();
         dbContext.Database.Migrate();
         var user = await DataFactory.CreateUser(dbContext);
-        var section = await DataFactory.CreateSection(dbContext);
 
         _client.DefaultRequestHeaders.Add("UserId", user.Id.ToString());
+        _client.DefaultRequestHeaders.Add("Role", "Moderator");
         var content = new FormUrlEncodedContent(new Dictionary<string, string>
         {
-            { "title", "test_title" },
-            { "content", "test_content" },
+            { "name", "test_section" },
         });
 
-        var response = await _client.PostAsync($"sections/{section.Id}/topics", content);
+        var response = await _client.PostAsync("/sections", content);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        var topicRecord = from t in dbContext.Topics
-                        where t.Title == "test_title" &&
-                                t.Content == "test_content"
-                        select t;
-
-        Assert.Null(topicRecord.FirstOrDefault());
+        Assert.Equal(0, await dbContext.Sections.CountAsync());
     }
 }

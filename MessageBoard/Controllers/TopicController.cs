@@ -8,7 +8,6 @@ using MessageBoard.Models;
 
 namespace MessageBoard.Controllers;
 
-[Route("topics")]
 [Authorize]
 [ValidateAntiForgeryToken]
 public class TopicController : Controller
@@ -27,8 +26,15 @@ public class TopicController : Controller
     }
 
     [HttpPost]
-    public async Task<IActionResult> Create(TopicDTO topicDTO)
+    [Route("sections/{sectionId}/topics")]
+    public async Task<IActionResult> Create(int sectionId, TopicDTO topicDTO)
     {
+        var section = await _context.Sections.FindAsync(sectionId);
+        if (section == null)
+        {
+            return NotFound();
+        }
+
         if (!ModelState.IsValid)
         {
             return UnprocessableEntity();
@@ -39,9 +45,10 @@ public class TopicController : Controller
         {
             Title = topicDTO.Title,
             Content = topicDTO.Content,
-            Author = await UserHandler.GetAuthenticatedUser(User, _context),
             CreatedAt = now,
             UpdatedAt = now,
+            Author = await UserHandler.GetAuthenticatedUser(User, _context),
+            Section = section,
         };
 
         await _context.Topics.AddAsync(topic);
@@ -50,7 +57,7 @@ public class TopicController : Controller
     }
 
     [HttpPut]
-    [Route("{id}")]
+    [Route("topics/{id}")]
     public async Task<IActionResult> Update(int id, TopicDTO topicDTO)
     {
         var topic = _context.Topics.Include(t => t.Author)
@@ -79,7 +86,7 @@ public class TopicController : Controller
     }
 
     [HttpDelete]
-    [Route("{id}")]
+    [Route("topics/{id}")]
     public async Task<IActionResult> Delete(int id)
     {
         var topic = _context.Topics.Include(t => t.Author)

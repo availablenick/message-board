@@ -7,6 +7,7 @@ namespace MessageBoard.Data;
 public class MessageBoardDbContext : DbContext
 {
     public DbSet<User> Users { get; set; }
+    public DbSet<Section> Sections { get; set; }
     public DbSet<Topic> Topics { get; set; }
     public DbSet<Post> Posts { get; set; }
     public DbSet<Rateable> Rateables { get; set; }
@@ -26,6 +27,10 @@ public class MessageBoardDbContext : DbContext
 
         modelBuilder.Entity<User>()
             .HasIndex(u => u.Email)
+            .IsUnique();
+
+        modelBuilder.Entity<Section>()
+            .HasIndex(s => s.Name)
             .IsUnique();
 
         modelBuilder.Entity<Rateable>().UseTptMappingStrategy();

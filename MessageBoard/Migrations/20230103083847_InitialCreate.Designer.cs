@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MessageBoard.Migrations
 {
     [DbContext(typeof(MessageBoardDbContext))]
-    [Migration("20230103051346_InitialCreate")]
+    [Migration("20230103083847_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -115,6 +115,32 @@ namespace MessageBoard.Migrations
                     b.ToTable("Ratings");
                 });
 
+            modelBuilder.Entity("MessageBoard.Models.Section", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.ToTable("Sections");
+                });
+
             modelBuilder.Entity("MessageBoard.Models.User", b =>
                 {
                     b.Property<int>("Id")
@@ -182,11 +208,16 @@ namespace MessageBoard.Migrations
                     b.Property<int?>("AuthorId")
                         .HasColumnType("int");
 
+                    b.Property<int>("SectionId")
+                        .HasColumnType("int");
+
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasIndex("AuthorId");
+
+                    b.HasIndex("SectionId");
 
                     b.ToTable("Topics");
                 });
@@ -260,7 +291,15 @@ namespace MessageBoard.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("MessageBoard.Models.Section", "Section")
+                        .WithMany("Topics")
+                        .HasForeignKey("SectionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.Navigation("Author");
+
+                    b.Navigation("Section");
                 });
 
             modelBuilder.Entity("MessageBoard.Models.Rateable", b =>
@@ -268,6 +307,11 @@ namespace MessageBoard.Migrations
                     b.Navigation("Complaints");
 
                     b.Navigation("Ratings");
+                });
+
+            modelBuilder.Entity("MessageBoard.Models.Section", b =>
+                {
+                    b.Navigation("Topics");
                 });
 
             modelBuilder.Entity("MessageBoard.Models.User", b =>

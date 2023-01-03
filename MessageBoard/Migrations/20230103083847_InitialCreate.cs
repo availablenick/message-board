@@ -27,6 +27,21 @@ namespace MessageBoard.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Sections",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Name = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Sections", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Users",
                 columns: table => new
                 {
@@ -108,6 +123,7 @@ namespace MessageBoard.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false),
                     Title = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    SectionId = table.Column<int>(type: "int", nullable: false),
                     AuthorId = table.Column<int>(type: "int", nullable: true)
                 },
                 constraints: table =>
@@ -117,6 +133,12 @@ namespace MessageBoard.Migrations
                         name: "FK_Topics_Rateables_Id",
                         column: x => x.Id,
                         principalTable: "Rateables",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Topics_Sections_SectionId",
+                        column: x => x.SectionId,
+                        principalTable: "Sections",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
@@ -186,9 +208,20 @@ namespace MessageBoard.Migrations
                 column: "TargetId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Sections_Name",
+                table: "Sections",
+                column: "Name",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Topics_AuthorId",
                 table: "Topics",
                 column: "AuthorId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Topics_SectionId",
+                table: "Topics",
+                column: "SectionId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Users_Email",
@@ -220,6 +253,9 @@ namespace MessageBoard.Migrations
 
             migrationBuilder.DropTable(
                 name: "Rateables");
+
+            migrationBuilder.DropTable(
+                name: "Sections");
 
             migrationBuilder.DropTable(
                 name: "Users");

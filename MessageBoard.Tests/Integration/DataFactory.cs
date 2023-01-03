@@ -27,16 +27,35 @@ public class DataFactory
         return user;
     }
 
+    public static async Task<Section> CreateSection(MessageBoardDbContext dbContext)
+    {
+        var now = DateTime.Now;
+        var section = new Section
+        {
+            Name = _faker.Lorem.Word(),
+            CreatedAt = now,
+            UpdatedAt = now,
+        };
+
+        await dbContext.Sections.AddAsync(section);
+        await dbContext.SaveChangesAsync();
+
+        return section;
+    }
+
     public static async Task<Topic> CreateTopic(MessageBoardDbContext dbContext)
     {
         var now = DateTime.Now;
+        var user = await CreateUser(dbContext);
+        var section = await CreateSection(dbContext);
         var topic = new Topic
         {
             Title = _faker.Lorem.Sentence(),
             Content = _faker.Lorem.Paragraph(),
             CreatedAt = now,
             UpdatedAt = now,
-            Author = await CreateUser(dbContext),
+            Author = user,
+            Section = section,
         };
 
         await dbContext.Topics.AddAsync(topic);
