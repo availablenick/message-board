@@ -7,6 +7,8 @@ using MessageBoard.Models;
 namespace MessageBoard.Controllers;
 
 [Route("sections")]
+[Authorize(Roles = "Moderator")]
+[ValidateAntiForgeryToken]
 public class SectionController : Controller
 {
     private readonly MessageBoardDbContext _context;
@@ -17,8 +19,6 @@ public class SectionController : Controller
     }
 
     [HttpPost]
-    [Authorize(Roles = "Moderator")]
-    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(string name)
     {
         var newSection = await MakeSection(name);
@@ -40,8 +40,6 @@ public class SectionController : Controller
 
     [HttpPut]
     [Route("{id}")]
-    [Authorize(Roles = "Moderator")]
-    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Update(int id, string name)
     {
         var section = await _context.Sections.FindAsync(id);
@@ -58,6 +56,21 @@ public class SectionController : Controller
         }
 
         _context.Sections.Update(section);
+        await _context.SaveChangesAsync();
+        return NoContent();
+    }
+
+    [HttpDelete]
+    [Route("{id}")]
+    public async Task<IActionResult> Delete(int id)
+    {
+        var section = await _context.Sections.FindAsync(id);
+        if (section == null)
+        {
+            return NotFound();
+        }
+
+        _context.Sections.Remove(section);
         await _context.SaveChangesAsync();
         return NoContent();
     }
