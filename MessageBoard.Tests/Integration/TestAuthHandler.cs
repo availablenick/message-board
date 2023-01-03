@@ -25,6 +25,11 @@ public class TestAuthHandler : AuthenticationHandler<AuthenticationSchemeOptions
                 claims.Add(new Claim(ClaimTypes.NameIdentifier, Request.Headers["UserId"]));
             }
 
+            if (Request.Headers.ContainsKey("Role"))
+            {
+                claims.Add(new Claim(ClaimTypes.Role, Request.Headers["Role"]));
+            }
+
             var identity = new ClaimsIdentity(claims, "Test");
             var principal = new ClaimsPrincipal(identity);
             var ticket = new AuthenticationTicket(principal, CookieAuthenticationDefaults.AuthenticationScheme);

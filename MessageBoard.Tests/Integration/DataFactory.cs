@@ -83,4 +83,23 @@ public class DataFactory
 
         return rating;
     }
+
+    public static async Task<Complaint> CreateComplaint(MessageBoardDbContext dbContext)
+    {
+        var now = DateTime.Now;
+        var post = await CreatePost(dbContext);
+        var complaint = new Complaint
+        {
+            Reason = _faker.Lorem.Sentence(),
+            CreatedAt = now,
+            UpdatedAt = now,
+            Author = post.Author,
+            Target = post,
+        };
+
+        await dbContext.Complaints.AddAsync(complaint);
+        await dbContext.SaveChangesAsync();
+
+        return complaint;
+    }
 }

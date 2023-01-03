@@ -8,6 +8,7 @@ using MessageBoard.Models;
 namespace MessageBoard.Controllers;
 
 [Route("complaints")]
+[ValidateAntiForgeryToken]
 public class ComplaintController : Controller
 {
     public class ComplaintDTO
@@ -25,7 +26,6 @@ public class ComplaintController : Controller
 
     [HttpPost]
     [Authorize]
-    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(ComplaintDTO complaintDTO)
     {
         var complaint = await MakeComplaint(complaintDTO);
@@ -35,6 +35,22 @@ public class ComplaintController : Controller
         }
 
         await _context.Complaints.AddAsync(complaint);
+        await _context.SaveChangesAsync();
+        return NoContent();
+    }
+
+    [HttpDelete]
+    [Route("{id}")]
+    [Authorize(Roles = "Moderator")]
+    public async Task<IActionResult> Delete(int id)
+    {
+        var complaint = await _context.Complaints.FindAsync(id);
+        if (complaint == null)
+        {
+            return NotFound();
+        }
+
+        _context.Complaints.Remove(complaint);
         await _context.SaveChangesAsync();
         return NoContent();
     }
