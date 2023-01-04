@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using System.ComponentModel.DataAnnotations;
 
 using MessageBoard.Auth;
 using MessageBoard.Data;
@@ -15,8 +16,12 @@ public class UserController : Controller
     public class UserCreationDTO
     {
         public string Username { get; set; }
+
+        [EmailAddress]
         public string Email { get; set; }
         public string Password { get; set; }
+
+        [Compare("Password")]
         public string PasswordConfirmation { get; set; }
         public IFormFile? Avatar { get; set; }
     }
@@ -45,9 +50,8 @@ public class UserController : Controller
             return Redirect("/");
         }
 
-        if (!MessageBoard.Models.User.DataIsValidForCreation(userDTO.Username,
-                userDTO.Email, userDTO.Password, userDTO.Avatar?.FileName) ||
-            userDTO.Password != userDTO.PasswordConfirmation ||
+        if (!ModelState.IsValid ||
+            !FileIsValid(userDTO.Avatar) ||
             !DataIsUnique(userDTO.Username, userDTO.Email))
         {
             return UnprocessableEntity();
@@ -81,11 +85,11 @@ public class UserController : Controller
             return Forbid();
         }
 
-        if (!MessageBoard.Models.User.DataIsValidForUpdate(userDTO.Username,
-                userDTO.Email, userDTO.Avatar?.FileName) ||
+        if (!ModelState.IsValid ||
+            !FileIsValid(userDTO.Avatar) ||
             !DataIsUnique(userDTO.Username, userDTO.Email, id))
         {
-            return UnprocessableEntity();
+            return UnprocessableEntity();   
         }
 
         user.Username = userDTO.Username;
@@ -122,6 +126,23 @@ public class UserController : Controller
         _context.Users.Update(user);
         await _context.SaveChangesAsync();
         return NoContent();
+    }
+
+    private bool FileIsValid(IFormFile file)
+    {
+        if (file == null)
+        {
+            return true;
+        }
+
+        string[] allowedExtensions = new string[] { ".jpg", ".jpeg", ".png" };
+        string extension = Path.GetExtension(file.FileName).ToLowerInvariant();
+        if (string.IsNullOrEmpty(extension) || !allowedExtensions.Contains(extension))
+        {
+            return false;
+        }
+
+        return true;
     }
 
     private bool DataIsUnique(string username, string email, int? userId = null)
