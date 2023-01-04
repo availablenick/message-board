@@ -21,7 +21,7 @@ public class SectionController : Controller
     [HttpPost]
     public async Task<IActionResult> Create(string name)
     {
-        var newSection = await MakeSection(name);
+        var newSection = MakeSection(name);
         if (!newSection.IsValid())
         {
             return UnprocessableEntity();
@@ -75,7 +75,7 @@ public class SectionController : Controller
         return NoContent();
     }
 
-    private async Task<Section> MakeSection(string name)
+    private Section MakeSection(string name)
     {
         var now = DateTime.Now;
         var section = new Section
