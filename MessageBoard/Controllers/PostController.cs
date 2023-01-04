@@ -33,18 +33,13 @@ public class PostController : Controller
             return UnprocessableEntity();
         }
 
-        var user = await UserHandler.GetAuthenticatedUser(User, _context);
         var topic = await _context.Topics.FindAsync(topicId);
-        var now = DateTime.Now;
-        var post = new Post
+        if (topic == null)
         {
-            Content = postDTO.Content,
-            CreatedAt = now,
-            UpdatedAt = now,
-            Author = user,
-            Topic = topic,
-        };
+            return NotFound();
+        }
 
+        var post = await MakePost(topic, postDTO);
         await _context.Posts.AddAsync(post);
         await _context.SaveChangesAsync();
         return NoContent();
@@ -99,5 +94,20 @@ public class PostController : Controller
         _context.Posts.Remove(post);
         await _context.SaveChangesAsync();
         return NoContent();
+    }
+
+    private async Task<Post> MakePost(Topic topic, PostDTO postDTO)
+    {
+        var now = DateTime.Now;
+        var post = new Post
+        {
+            Content = postDTO.Content,
+            CreatedAt = now,
+            UpdatedAt = now,
+            Author = await UserHandler.GetAuthenticatedUser(User, _context),
+            Topic = topic,
+        };
+
+        return post;
     }
 }
