@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MessageBoard.Migrations
 {
     [DbContext(typeof(MessageBoardDbContext))]
-    [Migration("20230104024633_InitialCreate")]
+    [Migration("20230104165245_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -210,6 +210,9 @@ namespace MessageBoard.Migrations
 
                     b.Property<int?>("AuthorId")
                         .HasColumnType("int");
+
+                    b.Property<bool>("IsPinned")
+                        .HasColumnType("bit");
 
                     b.Property<int>("SectionId")
                         .HasColumnType("int");

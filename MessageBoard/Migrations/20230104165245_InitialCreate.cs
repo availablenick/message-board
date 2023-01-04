@@ -124,6 +124,7 @@ namespace MessageBoard.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false),
                     Title = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    IsPinned = table.Column<bool>(type: "bit", nullable: false),
                     SectionId = table.Column<int>(type: "int", nullable: false),
                     AuthorId = table.Column<int>(type: "int", nullable: true)
                 },

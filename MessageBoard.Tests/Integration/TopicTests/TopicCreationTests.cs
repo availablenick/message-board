@@ -61,6 +61,7 @@ public class TopicCreationTests : IClassFixture<CustomWebApplicationFactory<Prog
         Assert.Equal(section.Id, topic.Section.Id);
         Assert.True(user.Topics.Exists(t => t.Id == topic.Id));
         Assert.True(section.Topics.Exists(t => t.Id == topic.Id));
+        Assert.False(topic.IsPinned);
         Assert.True(topic.CreatedAt.CompareTo(timeBeforeResponse) >= 0);
         Assert.True(topic.CreatedAt.CompareTo(timeAfterResponse) <= 0);
         Assert.True(topic.CreatedAt.CompareTo(topic.UpdatedAt) == 0);

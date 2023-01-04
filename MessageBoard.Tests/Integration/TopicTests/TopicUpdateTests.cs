@@ -122,6 +122,84 @@ public class TopicUpdateTests : IClassFixture<CustomWebApplicationFactory<Progra
     }
 
     [Fact]
+    public async Task TopicPinnedStatusCanBeUpdated()
+    {
+        Topic newTopic;
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
+            dbContext.Database.EnsureDeleted();
+            dbContext.Database.Migrate();
+            newTopic = await DataFactory.CreateTopic(dbContext);
+        }
+
+        _client.DefaultRequestHeaders.Add("UserId", newTopic.Author.Id.ToString());
+        _client.DefaultRequestHeaders.Add("Role", "Moderator");
+        var content = new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            { "_token", await Utilities.GetCSRFToken(_client) },
+            { "isPinned", "true" },
+        });
+
+        DateTime timeBeforeResponse = DateTime.Now;
+        var response = await _client.PostAsync($"/topics/{newTopic.Id}/pinning", content);
+        DateTime timeAfterResponse = DateTime.Now;
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
+            var topic = await dbContext.Topics.FindAsync(newTopic.Id);
+            Assert.True(topic.IsPinned);
+        }
+    }
+
+    [Fact]
+    public async Task TopicPinnedStatusCannotBeUpdatedByRegularUser()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
+        dbContext.Database.EnsureDeleted();
+        dbContext.Database.Migrate();
+        var newTopic = await DataFactory.CreateTopic(dbContext);
+
+        _client.DefaultRequestHeaders.Add("UserId", newTopic.Author.Id.ToString());
+        var content = new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            { "_token", await Utilities.GetCSRFToken(_client) },
+            { "isPinned", "true" },
+        });
+
+        var response = await _client.PostAsync($"/topics/{newTopic.Id}/pinning", content);
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        var topic = await dbContext.Topics.FindAsync(newTopic.Id);
+        Assert.False(topic.IsPinned);
+    }
+
+    [Fact]
+    public async Task UserCannotUpdatePinnedStatusOfNonExistentTopic()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
+        dbContext.Database.EnsureDeleted();
+        dbContext.Database.Migrate();
+        var user = await DataFactory.CreateUser(dbContext);
+
+        _client.DefaultRequestHeaders.Add("UserId", user.Id.ToString());
+        _client.DefaultRequestHeaders.Add("Role", "Moderator");
+        var content = new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            { "_token", await Utilities.GetCSRFToken(_client) },
+            { "isPinned", "true" },
+        });
+
+        var response = await _client.PostAsync("/topics/1/pinning", content);
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Fact]
     public async Task TopicCanOnlyBeUpdatedByItsAuthor()
     {
         using var scope = _factory.Services.CreateScope();

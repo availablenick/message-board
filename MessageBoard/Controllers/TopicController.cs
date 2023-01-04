@@ -40,17 +40,7 @@ public class TopicController : Controller
             return UnprocessableEntity();
         }
 
-        var now = DateTime.Now;
-        var topic = new Topic
-        {
-            Title = topicDTO.Title,
-            Content = topicDTO.Content,
-            CreatedAt = now,
-            UpdatedAt = now,
-            Author = await UserHandler.GetAuthenticatedUser(User, _context),
-            Section = section,
-        };
-
+        var topic = await MakeTopic(section, topicDTO);
         await _context.Topics.AddAsync(topic);
         await _context.SaveChangesAsync();
         return NoContent();
@@ -104,5 +94,40 @@ public class TopicController : Controller
         _context.Topics.Remove(topic);
         await _context.SaveChangesAsync();
         return NoContent();
+    }
+
+    [HttpPost]
+    [Route("topics/{id}/pinning")]
+    [Authorize(Roles = "Moderator")]
+    public async Task<IActionResult> UpdatedPinning(int id, bool isPinned)
+    {
+        var topic = _context.Topics.Include(t => t.Author)
+            .FirstOrDefault(t => t.Id == id);
+        if (topic == null)
+        {
+            return NotFound();
+        }
+
+        topic.IsPinned = isPinned;
+        _context.Topics.Update(topic);
+        await _context.SaveChangesAsync();
+        return NoContent();
+    }
+
+    private async Task<Topic> MakeTopic(Section section, TopicDTO topicDTO)
+    {
+        var now = DateTime.Now;
+        var topic = new Topic
+        {
+            Title = topicDTO.Title,
+            Content = topicDTO.Content,
+            IsPinned = false,
+            CreatedAt = now,
+            UpdatedAt = now,
+            Author = await UserHandler.GetAuthenticatedUser(User, _context),
+            Section = section,
+        };
+
+        return topic;
     }
 }
