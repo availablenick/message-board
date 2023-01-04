@@ -50,6 +50,7 @@ public class UserCreationTests : IClassFixture<CustomWebApplicationFactory<Progr
             { "username", "test_username" },
             { "email", "test@test.com" },
             { "password", "test_password" },
+            { "passwordConfirmation", "test_password" },
         });
 
         DateTime timeBeforeResponse = DateTime.Now;
@@ -86,6 +87,7 @@ public class UserCreationTests : IClassFixture<CustomWebApplicationFactory<Progr
         {
             { "email", "test@test.com" },
             { "password", "test_password" },
+            { "passwordConfirmation", "test_password" },
         });
 
         var response = await _client.PostAsync("/users", content);
@@ -108,6 +110,7 @@ public class UserCreationTests : IClassFixture<CustomWebApplicationFactory<Progr
             { "username", newUser.Username },
             { "email", $"2{newUser.Email}" },
             { "password", "test_password" },
+            { "passwordConfirmation", "test_password" },
         });
 
         var response = await _client.PostAsync("/users", content);
@@ -128,6 +131,7 @@ public class UserCreationTests : IClassFixture<CustomWebApplicationFactory<Progr
         {
             { "username", "test_username" },
             { "password", "test_password" },
+            { "passwordConfirmation", "test_password" },
         });
 
         var response = await _client.PostAsync("/users", content);
@@ -149,6 +153,7 @@ public class UserCreationTests : IClassFixture<CustomWebApplicationFactory<Progr
             { "username", "test_username" },
             { "email", "test_email" },
             { "password", "test_password" },
+            { "passwordConfirmation", "test_password" },
         });
 
         var response = await _client.PostAsync("/users", content);
@@ -171,6 +176,7 @@ public class UserCreationTests : IClassFixture<CustomWebApplicationFactory<Progr
             { "username", $"{newUser.Username}2" },
             { "email", newUser.Email },
             { "password", "test_password" },
+            { "passwordConfirmation", "test_password" },
         });
 
         var response = await _client.PostAsync("/users", content);
@@ -200,6 +206,33 @@ public class UserCreationTests : IClassFixture<CustomWebApplicationFactory<Progr
     }
 
     [Fact]
+    public async Task PasswordConfirmationMustMatchPassword()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
+        dbContext.Database.EnsureDeleted();
+        dbContext.Database.Migrate();
+
+        var content = new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            { "username", "test_username" },
+            { "email", "test@test.com" },
+            { "password", "test_password" },
+            { "passwordConfirmation", "test_password1" },
+        });
+
+        var response = await _client.PostAsync("/users", content);
+
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+        var userRecord = from u in dbContext.Users
+                        where u.Username == "test_username" &&
+                                u.Email == "test@test.com"
+                        select u;
+
+        Assert.Null(userRecord.FirstOrDefault());
+    }
+
+    [Fact]
     public async Task UserCannotBeCreatedByAuthenticatedUser()
     {
         _client.DefaultRequestHeaders.Authorization =
@@ -223,6 +256,7 @@ public class UserCreationTests : IClassFixture<CustomWebApplicationFactory<Progr
         multipartFormDataContent.Add(new StringContent("test_username"), "username");
         multipartFormDataContent.Add(new StringContent("test@test.com"), "email");
         multipartFormDataContent.Add(new StringContent("test_password"), "password");
+        multipartFormDataContent.Add(new StringContent("test_password"), "passwordConfirmation");
 
         HttpResponseMessage response;
         using (var streamContent = new StreamContent(new MemoryStream()))
@@ -256,6 +290,7 @@ public class UserCreationTests : IClassFixture<CustomWebApplicationFactory<Progr
         multipartFormDataContent.Add(new StringContent("test_username"), "username");
         multipartFormDataContent.Add(new StringContent("test@test.com"), "email");
         multipartFormDataContent.Add(new StringContent("test_password"), "password");
+        multipartFormDataContent.Add(new StringContent("test_password"), "passwordConfirmation");
 
         HttpResponseMessage response;
         using (var streamContent = new StreamContent(new MemoryStream()))
@@ -289,6 +324,7 @@ public class UserCreationTests : IClassFixture<CustomWebApplicationFactory<Progr
         multipartFormDataContent.Add(new StringContent("test_username"), "username");
         multipartFormDataContent.Add(new StringContent("test@test.com"), "email");
         multipartFormDataContent.Add(new StringContent("test_password"), "password");
+        multipartFormDataContent.Add(new StringContent("test_password"), "passwordConfirmation");
 
         HttpResponseMessage response;
         using (var streamContent = new StreamContent(new MemoryStream()))

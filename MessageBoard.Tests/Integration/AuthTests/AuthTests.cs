@@ -35,6 +35,7 @@ public class AuthTests : IClassFixture<WebApplicationFactory<Program>>
             { "username", "test_username" },
             { "email", "test@test.com" },
             { "password", "test_password" },
+            { "passwordConfirmation", "test_password" },
         }));
 
         var content = new FormUrlEncodedContent(new Dictionary<string, string>
@@ -63,6 +64,7 @@ public class AuthTests : IClassFixture<WebApplicationFactory<Program>>
             { "username", "test_username" },
             { "email", "test@test.com" },
             { "password", "test_password" },
+            { "passwordConfirmation", "test_password" },
         }));
 
         var user = dbContext.Users.FirstOrDefault(u => u.Username == "test_username");
@@ -113,6 +115,7 @@ public class AuthTests : IClassFixture<WebApplicationFactory<Program>>
             { "username", "test_username" },
             { "email", "test@test.com" },
             { "password", "test_password" },
+            { "passwordConfirmation", "test_password" },
         }));
 
         var response = await _client.PostAsync("/login", new FormUrlEncodedContent(new Dictionary<string, string>
@@ -136,6 +139,7 @@ public class AuthTests : IClassFixture<WebApplicationFactory<Program>>
             { "username", "test_username" },
             { "email", "test@test.com" },
             { "password", "test_password" },
+            { "passwordConfirmation", "test_password" },
         }));
 
         var content = new FormUrlEncodedContent(new Dictionary<string, string>
@@ -163,6 +167,7 @@ public class AuthTests : IClassFixture<WebApplicationFactory<Program>>
             { "username", "test_username" },
             { "email", "test@test.com" },
             { "password", "test_password" },
+            { "passwordConfirmation", "test_password" },
         }));
 
         var content = new FormUrlEncodedContent(new Dictionary<string, string>
@@ -203,6 +208,7 @@ public class AuthTests : IClassFixture<WebApplicationFactory<Program>>
             { "username", "test_username" },
             { "email", "test@test.com" },
             { "password", "test_password" },
+            { "passwordConfirmation", "test_password" },
         }));
 
         var content = new FormUrlEncodedContent(new Dictionary<string, string>

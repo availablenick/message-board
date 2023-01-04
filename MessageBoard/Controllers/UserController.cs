@@ -17,6 +17,7 @@ public class UserController : Controller
         public string Username { get; set; }
         public string Email { get; set; }
         public string Password { get; set; }
+        public string PasswordConfirmation { get; set; }
         public IFormFile? Avatar { get; set; }
     }
 
@@ -46,6 +47,7 @@ public class UserController : Controller
 
         if (!MessageBoard.Models.User.DataIsValidForCreation(userDTO.Username,
                 userDTO.Email, userDTO.Password, userDTO.Avatar?.FileName) ||
+            userDTO.Password != userDTO.PasswordConfirmation ||
             !DataIsUnique(userDTO.Username, userDTO.Email))
         {
             return UnprocessableEntity();
