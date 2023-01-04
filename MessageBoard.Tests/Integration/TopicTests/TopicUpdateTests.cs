@@ -28,7 +28,7 @@ public class TopicUpdateTests : IClassFixture<CustomWebApplicationFactory<Progra
     }
 
     [Fact]
-    public async Task TopicCanBeUpdated()
+    public async Task TopicCanBeUpdatedByItsAuthor()
     {
         Topic newTopic;
         using (var scope = _factory.Services.CreateScope())
@@ -65,6 +65,105 @@ public class TopicUpdateTests : IClassFixture<CustomWebApplicationFactory<Progra
             Assert.True(topic.UpdatedAt.CompareTo(timeBeforeResponse) >= 0);
             Assert.True(topic.UpdatedAt.CompareTo(timeAfterResponse) <= 0);
         }
+    }
+
+    [Fact]
+    public async Task TopicCanBeUpdatedByModerator()
+    {
+        User user;
+        Topic newTopic;
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
+            dbContext.Database.EnsureDeleted();
+            dbContext.Database.Migrate();
+            user = await DataFactory.CreateUser(dbContext);
+            newTopic = await DataFactory.CreateTopic(dbContext);
+        }
+
+        _client.DefaultRequestHeaders.Add("UserId", user.Id.ToString());
+        _client.DefaultRequestHeaders.Add("Role", "Moderator");
+        var content = new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            { "_token", await Utilities.GetCSRFToken(_client) },
+            { "title", $"{newTopic.Title}_edit" },
+            { "content", $"{newTopic.Content}_edit" },
+        });
+
+        DateTime timeBeforeResponse = DateTime.Now;
+        var response = await _client.PutAsync($"/topics/{newTopic.Id}", content);
+        DateTime timeAfterResponse = DateTime.Now;
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
+            var topicRecord = from t in dbContext.Topics
+                            where t.Title == $"{newTopic.Title}_edit" &&
+                                    t.Content == $"{newTopic.Content}_edit"
+                            select t;
+
+            var topic = topicRecord.FirstOrDefault();
+            Assert.NotNull(topic);
+            Assert.True(topic.UpdatedAt.CompareTo(timeBeforeResponse) >= 0);
+            Assert.True(topic.UpdatedAt.CompareTo(timeAfterResponse) <= 0);
+        }
+    }
+
+    [Fact]
+    public async Task TopicCannotBeUpdatedByUnauthorizedUser()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
+        dbContext.Database.EnsureDeleted();
+        dbContext.Database.Migrate();
+        var user = await DataFactory.CreateUser(dbContext);
+        var newTopic = await DataFactory.CreateTopic(dbContext);
+
+        _client.DefaultRequestHeaders.Add("UserId", user.Id.ToString());
+        var content = new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            { "_token", await Utilities.GetCSRFToken(_client) },
+            { "title", $"{newTopic.Title}_edit" },
+            { "content", $"{newTopic.Content}_edit" },
+        });
+
+        var response = await _client.PutAsync($"/topics/{newTopic.Id}", content);
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        var topicRecord = from t in dbContext.Topics
+                        where t.Title == $"{newTopic.Title}_edit" &&
+                                t.Content == $"{newTopic.Content}_edit"
+                        select t;
+
+        Assert.Null(topicRecord.FirstOrDefault());
+    }
+
+    [Fact]
+    public async Task TopicCannotBeUpdatedByUnauthenticatedUser()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
+        dbContext.Database.EnsureDeleted();
+        dbContext.Database.Migrate();
+        var topic = await DataFactory.CreateTopic(dbContext);
+
+        _client.DefaultRequestHeaders.Remove("Authorization");
+        var content = new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            { "title", $"{topic.Title}_edit" },
+            { "content", $"{topic.Content}_edit" },
+        });
+
+        var response = await _client.PutAsync($"/topics/{topic.Id}", content);
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        var topicRecord = from t in dbContext.Topics
+                        where t.Title == $"{topic.Title}_edit" &&
+                                t.Content == $"{topic.Content}_edit"
+                        select t;
+
+        Assert.Null(topicRecord.FirstOrDefault());
     }
 
     [Fact]
@@ -197,62 +296,6 @@ public class TopicUpdateTests : IClassFixture<CustomWebApplicationFactory<Progra
         var response = await _client.PostAsync("/topics/1/pinning", content);
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
-    }
-
-    [Fact]
-    public async Task TopicCanOnlyBeUpdatedByItsAuthor()
-    {
-        using var scope = _factory.Services.CreateScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
-        dbContext.Database.EnsureDeleted();
-        dbContext.Database.Migrate();
-        var user = await DataFactory.CreateUser(dbContext);
-        var newTopic = await DataFactory.CreateTopic(dbContext);
-
-        _client.DefaultRequestHeaders.Add("UserId", user.Id.ToString());
-        var content = new FormUrlEncodedContent(new Dictionary<string, string>
-        {
-            { "_token", await Utilities.GetCSRFToken(_client) },
-            { "title", $"{newTopic.Title}_edit" },
-            { "content", $"{newTopic.Content}_edit" },
-        });
-
-        var response = await _client.PutAsync($"/topics/{newTopic.Id}", content);
-
-        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
-        var topicRecord = from t in dbContext.Topics
-                        where t.Title == $"{newTopic.Title}_edit" &&
-                                t.Content == $"{newTopic.Content}_edit"
-                        select t;
-
-        Assert.Null(topicRecord.FirstOrDefault());
-    }
-
-    [Fact]
-    public async Task TopicCannotBeUpdatedByUnauthenticatedUser()
-    {
-        using var scope = _factory.Services.CreateScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
-        dbContext.Database.EnsureDeleted();
-        dbContext.Database.Migrate();
-        var topic = await DataFactory.CreateTopic(dbContext);
-
-        _client.DefaultRequestHeaders.Remove("Authorization");
-        var content = new FormUrlEncodedContent(new Dictionary<string, string>
-        {
-            { "title", $"{topic.Title}_edit" },
-            { "content", $"{topic.Content}_edit" },
-        });
-
-        var response = await _client.PutAsync($"/topics/{topic.Id}", content);
-
-        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
-        var topicRecord = from t in dbContext.Topics
-                        where t.Title == $"{topic.Title}_edit" &&
-                                t.Content == $"{topic.Content}_edit"
-                        select t;
-
-        Assert.Null(topicRecord.FirstOrDefault());
     }
 
     [Fact]

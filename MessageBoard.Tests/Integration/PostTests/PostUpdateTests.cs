@@ -28,7 +28,7 @@ public class PostUpdateTests : IClassFixture<CustomWebApplicationFactory<Program
     }
 
     [Fact]
-    public async Task PostCanBeUpdated()
+    public async Task PostCanBeUpdatedByItsAuthor()
     {
         Post newPost;
         using (var scope = _factory.Services.CreateScope())
@@ -66,7 +66,48 @@ public class PostUpdateTests : IClassFixture<CustomWebApplicationFactory<Program
     }
 
     [Fact]
-    public async Task PostCanOnlyBeUpdatedByItsAuthor()
+    public async Task PostCanBeUpdatedByModerator()
+    {
+        User user;
+        Post newPost;
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
+            dbContext.Database.EnsureDeleted();
+            dbContext.Database.Migrate();
+            user = await DataFactory.CreateUser(dbContext);
+            newPost = await DataFactory.CreatePost(dbContext);
+        }
+
+        _client.DefaultRequestHeaders.Add("UserId", user.Id.ToString());
+        _client.DefaultRequestHeaders.Add("Role", "Moderator");
+        var content = new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            { "_token", await Utilities.GetCSRFToken(_client) },
+            { "content", $"{newPost.Content}_edit" },
+        });
+
+        DateTime timeBeforeResponse = DateTime.Now;
+        var response = await _client.PutAsync($"/posts/{newPost.Id}", content);
+        DateTime timeAfterResponse = DateTime.Now;
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
+            var postRecord = from p in dbContext.Posts
+                            where p.Content == $"{newPost.Content}_edit"
+                            select p;
+
+            var post = postRecord.FirstOrDefault();
+            Assert.NotNull(post);
+            Assert.True(post.UpdatedAt.CompareTo(timeBeforeResponse) >= 0);
+            Assert.True(post.UpdatedAt.CompareTo(timeAfterResponse) <= 0);
+        }
+    }
+
+    [Fact]
+    public async Task PostCannotBeUpdatedByUnauthorizedUser()
     {
         using var scope = _factory.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
@@ -85,6 +126,31 @@ public class PostUpdateTests : IClassFixture<CustomWebApplicationFactory<Program
         var response = await _client.PutAsync($"/posts/{newPost.Id}", content);
 
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        var postRecord = from p in dbContext.Posts
+                        where p.Content == $"{newPost.Content}_edit"
+                        select p;
+
+        Assert.Null(postRecord.FirstOrDefault());
+    }
+
+    [Fact]
+    public async Task PostCannotBeUpdatedByUnauthenticatedUser()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
+        dbContext.Database.EnsureDeleted();
+        dbContext.Database.Migrate();
+        var newPost = await DataFactory.CreatePost(dbContext);
+
+        _client.DefaultRequestHeaders.Remove("Authorization");
+        var content = new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            { "content", $"{newPost.Content}_edit" },
+        });
+
+        var response = await _client.PutAsync($"/posts/{newPost.Id}", content);
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
         var postRecord = from p in dbContext.Posts
                         where p.Content == $"{newPost.Content}_edit"
                         select p;
@@ -115,31 +181,6 @@ public class PostUpdateTests : IClassFixture<CustomWebApplicationFactory<Program
                         select p;
 
         Assert.NotNull(postRecord.FirstOrDefault());
-    }
-
-    [Fact]
-    public async Task PostCannotBeUpdatedByUnauthenticatedUser()
-    {
-        using var scope = _factory.Services.CreateScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
-        dbContext.Database.EnsureDeleted();
-        dbContext.Database.Migrate();
-        var newPost = await DataFactory.CreatePost(dbContext);
-
-        _client.DefaultRequestHeaders.Remove("Authorization");
-        var content = new FormUrlEncodedContent(new Dictionary<string, string>
-        {
-            { "content", $"{newPost.Content}_edit" },
-        });
-
-        var response = await _client.PutAsync($"/posts/{newPost.Id}", content);
-
-        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
-        var postRecord = from p in dbContext.Posts
-                        where p.Content == $"{newPost.Content}_edit"
-                        select p;
-
-        Assert.Null(postRecord.FirstOrDefault());
     }
 
     [Fact]

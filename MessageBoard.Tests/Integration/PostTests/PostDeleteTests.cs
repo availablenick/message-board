@@ -28,7 +28,7 @@ public class PostDeleteTests : IClassFixture<CustomWebApplicationFactory<Program
     }
 
     [Fact]
-    public async Task PostCanBeDeleted()
+    public async Task PostCanBeDeletedByItsAuthor()
     {
         Post post;
         using (var scope = _factory.Services.CreateScope())
@@ -60,7 +60,42 @@ public class PostDeleteTests : IClassFixture<CustomWebApplicationFactory<Program
     }
 
     [Fact]
-    public async Task PostCanOnlyBeDeletedByItsAuthor()
+    public async Task PostCanBeDeletedByModerator()
+    {
+        User user;
+        Post post;
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
+            dbContext.Database.EnsureDeleted();
+            dbContext.Database.Migrate();
+            user = await DataFactory.CreateUser(dbContext);
+            post = await DataFactory.CreatePost(dbContext);
+        }
+
+        _client.DefaultRequestHeaders.Add("UserId", user.Id.ToString());
+        _client.DefaultRequestHeaders.Add("Role", "Moderator");
+        _client.DefaultRequestHeaders.Add("X-XSRF-TOKEN", await Utilities.GetCSRFToken(_client));
+        var response = await _client.DeleteAsync($"/posts/{post.Id}");
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
+            var postRecord = from p in dbContext.Posts
+                            where p.Id == post.Id
+                            select p;
+
+            Assert.Null(postRecord.FirstOrDefault());
+            var freshUser = await dbContext.Users.Include(u => u.Posts).FirstAsync(u => u.Id == post.Author.Id);
+            var freshTopic = await dbContext.Topics.Include(t => t.Posts).FirstAsync(t => t.Id == post.Topic.Id);
+            Assert.Empty(freshUser.Posts);
+            Assert.Empty(freshTopic.Posts);
+        }
+    }
+
+    [Fact]
+    public async Task PostCannotBeDeletedByUnauthorizedUser()
     {
         using var scope = _factory.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();

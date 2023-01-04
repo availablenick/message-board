@@ -28,7 +28,7 @@ public class TopicDeleteTests : IClassFixture<CustomWebApplicationFactory<Progra
     }
 
     [Fact]
-    public async Task TopicCanBeDeleted()
+    public async Task TopicCanBeDeletedByItsAuthor()
     {
         Topic topic;
         using (var scope = _factory.Services.CreateScope())
@@ -64,7 +64,46 @@ public class TopicDeleteTests : IClassFixture<CustomWebApplicationFactory<Progra
     }
 
     [Fact]
-    public async Task TopicCanOnlyBeDeletedByItsAuthor()
+    public async Task TopicCanBeDeletedByModerator()
+    {
+        User user;
+        Topic topic;
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
+            dbContext.Database.EnsureDeleted();
+            dbContext.Database.Migrate();
+            user = await DataFactory.CreateUser(dbContext);
+            topic = await DataFactory.CreateTopic(dbContext);
+        }
+
+        _client.DefaultRequestHeaders.Add("UserId", user.Id.ToString());
+        _client.DefaultRequestHeaders.Add("Role", "Moderator");
+        _client.DefaultRequestHeaders.Add("X-XSRF-TOKEN", await Utilities.GetCSRFToken(_client));
+        var response = await _client.DeleteAsync($"/topics/{topic.Id}");
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
+            var topicRecord = from t in dbContext.Topics
+                            where t.Id == topic.Id
+                            select t;
+
+            Assert.Null(topicRecord.FirstOrDefault());
+            var freshUser = await dbContext.Users.Include(u => u.Topics)
+                .FirstAsync(u => u.Id == topic.Author.Id);
+
+            var freshSection = await dbContext.Sections.Include(s => s.Topics)
+                .FirstAsync(s => s.Id == topic.Section.Id);
+
+            Assert.Empty(freshUser.Topics);
+            Assert.Empty(freshSection.Topics);
+        }
+    }
+
+    [Fact]
+    public async Task TopicCannotBeDeletedByUnauthorizedUser()
     {
         using var scope = _factory.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();

@@ -61,7 +61,8 @@ public class PostController : Controller
             return NotFound();
         }
 
-        if (!ResourceHandler.IsAuthorized(User, post.Author.Id))
+        if (!ResourceHandler.IsAuthorized(User, post.Author.Id) &&
+            !User.IsInRole("Moderator"))
         {
             return Forbid();
         }
@@ -89,7 +90,8 @@ public class PostController : Controller
             return NotFound();
         }
 
-        if (!ResourceHandler.IsAuthorized(User, post.Author.Id))
+        if (!ResourceHandler.IsAuthorized(User, post.Author.Id) &&
+            !User.IsInRole("Moderator"))
         {
             return Forbid();
         }

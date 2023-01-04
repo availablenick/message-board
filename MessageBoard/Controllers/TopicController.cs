@@ -57,7 +57,8 @@ public class TopicController : Controller
             return NotFound();
         }
 
-        if (!ResourceHandler.IsAuthorized(User, topic.Author.Id))
+        if (!ResourceHandler.IsAuthorized(User, topic.Author.Id) &&
+            !User.IsInRole("Moderator"))
         {
             return Forbid();
         }
@@ -86,7 +87,8 @@ public class TopicController : Controller
             return NotFound();
         }
 
-        if (!ResourceHandler.IsAuthorized(User, topic.Author.Id))
+        if (!ResourceHandler.IsAuthorized(User, topic.Author.Id) &&
+            !User.IsInRole("Moderator"))
         {
             return Forbid();
         }
