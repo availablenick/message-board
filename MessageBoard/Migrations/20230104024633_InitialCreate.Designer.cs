@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MessageBoard.Migrations
 {
     [DbContext(typeof(MessageBoardDbContext))]
-    [Migration("20230103083847_InitialCreate")]
+    [Migration("20230104024633_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -164,6 +164,9 @@ namespace MessageBoard.Migrations
 
                     b.Property<string>("PasswordHash")
                         .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Role")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("UpdatedAt")

@@ -52,6 +52,39 @@ public class AuthTests : IClassFixture<WebApplicationFactory<Program>>
     }
 
     [Fact]
+    public async Task UnauthenticatedUserCanLogInAsModerator()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
+        dbContext.Database.EnsureDeleted();
+        dbContext.Database.Migrate();
+        await _client.PostAsync("/users", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            { "username", "test_username" },
+            { "email", "test@test.com" },
+            { "password", "test_password" },
+        }));
+
+        var user = dbContext.Users.FirstOrDefault(u => u.Username == "test_username");
+        user.Role = "Moderator";
+        dbContext.Users.Update(user);
+        await dbContext.SaveChangesAsync();
+
+        var content = new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            { "username", "test_username" },
+            { "password", "test_password" },
+        });
+
+        var response1 = await _client.PostAsync("/login", content);
+        var response2 = await _client.GetAsync("/moderator-endpoint");
+
+        Assert.Equal(HttpStatusCode.Redirect, response1.StatusCode);
+        Assert.Equal("/", response1.Headers.Location.OriginalString);
+        response2.EnsureSuccessStatusCode();
+    }
+
+    [Fact]
     public async Task UnauthenticatedUserCannotLogInWithNonExistentUsername()
     {
         using var scope = _factory.Services.CreateScope();

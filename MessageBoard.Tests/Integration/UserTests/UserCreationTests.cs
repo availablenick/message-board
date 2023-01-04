@@ -68,6 +68,7 @@ public class UserCreationTests : IClassFixture<CustomWebApplicationFactory<Progr
         PasswordVerificationResult res = passwordHasher.VerifyHashedPassword(
             user, user.PasswordHash, "test_password");
         Assert.Equal(PasswordVerificationResult.Success, res);
+        Assert.Null(user.Role);
         Assert.True(user.CreatedAt.CompareTo(timeBeforeResponse) >= 0);
         Assert.True(user.CreatedAt.CompareTo(timeAfterResponse) <= 0);
         Assert.True(user.CreatedAt.CompareTo(user.UpdatedAt) == 0);

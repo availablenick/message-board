@@ -52,6 +52,11 @@ if (app.Environment.IsStaging())
     app.MapGet("/secure-endpoint", (HttpContext context) => Results.Ok())
         .RequireAuthorization();
 
+    app.MapGet("/moderator-endpoint", (HttpContext context) =>
+    {
+        return context.User.IsInRole("Moderator") ? Results.Ok() : Results.Forbid();
+    });
+
     app.MapGet("/csrf-token", (IAntiforgery forgeryService, HttpContext context) =>
     {
         var tokens = forgeryService.GetAndStoreTokens(context);
