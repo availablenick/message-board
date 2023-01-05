@@ -161,6 +161,30 @@ public class TopicDeleteTests : IClassFixture<CustomWebApplicationFactory<Progra
     }
 
     [Fact]
+    public async Task PostsAreDeletedAfterTopicDelete()
+    {
+        Post post;
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
+            dbContext.Database.EnsureDeleted();
+            dbContext.Database.Migrate();
+            post = await DataFactory.CreatePost(dbContext);
+        }
+
+        _client.DefaultRequestHeaders.Add("UserId", post.Topic.Author.Id.ToString());
+        _client.DefaultRequestHeaders.Add("X-XSRF-TOKEN", await Utilities.GetCSRFToken(_client));
+        var response = await _client.DeleteAsync($"/topics/{post.Topic.Id}");
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
+            Assert.Null(dbContext.Rateables.Find(post.Id));
+        }
+    }
+
+    [Fact]
     public async Task CSRFProtectionIsActive()
     {
         using var scope = _factory.Services.CreateScope();

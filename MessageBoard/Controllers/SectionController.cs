@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 using MessageBoard.Data;
 using MessageBoard.Models;
@@ -70,6 +71,18 @@ public class SectionController : Controller
             return NotFound();
         }
 
+        _context.Entry(section)
+            .Collection(s => s.Topics)
+            .Query()
+            .Include(t => t.Posts)
+            .Load();
+
+        foreach (var topic in section.Topics)
+        {
+            _context.Rateables.RemoveRange(topic.Posts);
+        }
+
+        _context.Rateables.RemoveRange(section.Topics);
         _context.Sections.Remove(section);
         await _context.SaveChangesAsync();
         return NoContent();
