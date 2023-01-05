@@ -134,7 +134,7 @@ public class ComplaintCreationTests : IClassFixture<CustomWebApplicationFactory<
 
         var response = await _client.PostAsync("/complaints", content);
 
-        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
         Assert.Equal(0, await dbContext.Complaints.CountAsync());
     }
 
