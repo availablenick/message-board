@@ -18,6 +18,12 @@ public class TopicController : Controller
         public string Content { get; set; }
     }
 
+    public class TopicStatusDTO
+    {
+        public bool? IsPinned { get; set; }
+        public bool? IsOpen { get; set; }
+    }
+
     private readonly MessageBoardDbContext _context;
 
     public TopicController(MessageBoardDbContext context)
@@ -98,10 +104,10 @@ public class TopicController : Controller
         return NoContent();
     }
 
-    [HttpPost]
-    [Route("topics/{id}/pinning")]
+    [HttpPut]
+    [Route("topics/{id}/status")]
     [Authorize(Roles = "Moderator")]
-    public async Task<IActionResult> UpdatedPinning(int id, bool isPinned)
+    public async Task<IActionResult> Update(int id, TopicStatusDTO topicDTO)
     {
         var topic = _context.Topics.Include(t => t.Author)
             .FirstOrDefault(t => t.Id == id);
@@ -110,7 +116,9 @@ public class TopicController : Controller
             return NotFound();
         }
 
-        topic.IsPinned = isPinned;
+        topic.IsPinned = topicDTO.IsPinned ?? topic.IsPinned;
+        topic.IsOpen = topicDTO.IsOpen ?? topic.IsOpen;
+
         _context.Topics.Update(topic);
         await _context.SaveChangesAsync();
         return NoContent();
@@ -124,6 +132,7 @@ public class TopicController : Controller
             Title = topicDTO.Title,
             Content = topicDTO.Content,
             IsPinned = false,
+            IsOpen = true,
             CreatedAt = now,
             UpdatedAt = now,
             Author = await UserHandler.GetAuthenticatedUser(User, _context),

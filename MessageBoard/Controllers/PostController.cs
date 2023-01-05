@@ -39,6 +39,11 @@ public class PostController : Controller
             return NotFound();
         }
 
+        if (!topic.IsOpen)
+        {
+            return UnprocessableEntity();
+        }
+
         var post = await MakePost(topic, postDTO);
         await _context.Posts.AddAsync(post);
         await _context.SaveChangesAsync();

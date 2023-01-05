@@ -208,6 +208,9 @@ namespace MessageBoard.Migrations
                     b.Property<int?>("AuthorId")
                         .HasColumnType("int");
 
+                    b.Property<bool>("IsOpen")
+                        .HasColumnType("bit");
+
                     b.Property<bool>("IsPinned")
                         .HasColumnType("bit");
 

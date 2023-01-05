@@ -43,7 +43,8 @@ public class DataFactory
         return section;
     }
 
-    public static async Task<Topic> CreateTopic(MessageBoardDbContext dbContext)
+    public static async Task<Topic> CreateTopic(MessageBoardDbContext dbContext,
+        bool isOpen = true)
     {
         var now = DateTime.Now;
         var user = await CreateUser(dbContext);
@@ -52,6 +53,8 @@ public class DataFactory
         {
             Title = _faker.Lorem.Sentence(),
             Content = _faker.Lorem.Paragraph(),
+            IsPinned = false,
+            IsOpen = isOpen,
             CreatedAt = now,
             UpdatedAt = now,
             Author = user,
