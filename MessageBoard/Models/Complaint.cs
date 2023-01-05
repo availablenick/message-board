@@ -6,7 +6,7 @@ public class Complaint
     public string Reason { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
-    public User? Author { get; set; }
+    public User Author { get; set; }
     public Rateable Target { get; set; }
 
     public bool IsValid()

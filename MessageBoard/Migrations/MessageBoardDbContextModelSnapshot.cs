@@ -30,7 +30,7 @@ namespace MessageBoard.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int?>("AuthorId")
+                    b.Property<int>("AuthorId")
                         .HasColumnType("int");
 
                     b.Property<DateTime>("CreatedAt")
@@ -232,7 +232,9 @@ namespace MessageBoard.Migrations
                 {
                     b.HasOne("MessageBoard.Models.User", "Author")
                         .WithMany("Complaints")
-                        .HasForeignKey("AuthorId");
+                        .HasForeignKey("AuthorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("MessageBoard.Models.Rateable", "Target")
                         .WithMany("Complaints")
