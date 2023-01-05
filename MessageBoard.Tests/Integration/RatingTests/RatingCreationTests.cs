@@ -132,24 +132,25 @@ public class RatingCreationTests : IClassFixture<CustomWebApplicationFactory<Pro
     }
 
     [Fact]
-    public async Task RatingCannotBeCreatedWithoutTargetId()
+    public async Task RatingCannotBeCreatedForNonExistentTarget()
     {
         using var scope = _factory.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
         dbContext.Database.EnsureDeleted();
         dbContext.Database.Migrate();
-        var post = await DataFactory.CreatePost(dbContext);
+        var user = await DataFactory.CreateUser(dbContext);
 
-        _client.DefaultRequestHeaders.Add("UserId", post.Author.Id.ToString());
+        _client.DefaultRequestHeaders.Add("UserId", user.Id.ToString());
         var content = new FormUrlEncodedContent(new Dictionary<string, string>
         {
             { "_token", await Utilities.GetCSRFToken(_client) },
             { "value", "1" },
+            { "targetId", "3" },
         });
 
         var response = await _client.PostAsync("/ratings", content);
 
-        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
         Assert.Equal(0, await dbContext.Ratings.CountAsync());
     }
 

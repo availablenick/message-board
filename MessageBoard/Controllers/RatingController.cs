@@ -13,12 +13,6 @@ namespace MessageBoard.Controllers;
 [ValidateAntiForgeryToken]
 public class RatingController : Controller
 {
-    public class RatingDTO
-    {
-        public int Value { get; set; }
-        public int TargetId { get; set; }
-    }
-
     private readonly MessageBoardDbContext _context;
 
     public RatingController(MessageBoardDbContext context)
@@ -27,9 +21,15 @@ public class RatingController : Controller
     }
 
     [HttpPost]
-    public async Task<IActionResult> Create(RatingDTO ratingDTO)
+    public async Task<IActionResult> Create(int targetId, int value)
     {
-        var rating = await MakeRating(ratingDTO);
+        var target = await _context.Rateables.FindAsync(targetId);
+        if (target == null)
+        {
+            return NotFound();
+        }
+
+        var rating = await MakeRating(target, value);
         if (!rating.IsValid())
         {
             return UnprocessableEntity();
@@ -50,10 +50,7 @@ public class RatingController : Controller
             return NotFound();
         }
 
-        _context.Entry(rating)
-            .Reference(r => r.Owner)
-            .Load();
-
+        _context.Entry(rating).Reference(r => r.Owner).Load();
         if (!ResourceHandler.IsAuthorized(User, rating.Owner.Id))
         {
             return Forbid();
@@ -96,17 +93,15 @@ public class RatingController : Controller
         return NoContent();
     }
 
-    private async Task<Rating> MakeRating(RatingDTO ratingDTO)
+    private async Task<Rating> MakeRating(Rateable target, int value)
     {
-        var user = await UserHandler.GetAuthenticatedUser(User, _context);
-        var target = await _context.Rateables.FindAsync(ratingDTO.TargetId);
         var now = DateTime.Now;
         var rating = new Rating
         {
-            Value = ratingDTO.Value,
+            Value = value,
             CreatedAt = now,
             UpdatedAt = now,
-            Owner = user,
+            Owner = await UserHandler.GetAuthenticatedUser(User, _context),
             Target = target,
         };
 
