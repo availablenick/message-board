@@ -94,7 +94,7 @@ public class ComplaintCreationTests : IClassFixture<CustomWebApplicationFactory<
     }
 
     [Fact]
-    public async Task ComplaintCannoBeCreatedWithoutReason()
+    public async Task ComplaintCannotBeCreatedWithoutReason()
     {
         using var scope = _factory.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
@@ -116,15 +116,15 @@ public class ComplaintCreationTests : IClassFixture<CustomWebApplicationFactory<
     }
 
     [Fact]
-    public async Task ComplaintCannoBeCreatedForNonExistentTarget()
+    public async Task ComplaintCannotBeCreatedForNonExistentTarget()
     {
         using var scope = _factory.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
         dbContext.Database.EnsureDeleted();
         dbContext.Database.Migrate();
-        var post = await DataFactory.CreatePost(dbContext);
+        var user = await DataFactory.CreateUser(dbContext);
 
-        _client.DefaultRequestHeaders.Add("UserId", post.Author.Id.ToString());
+        _client.DefaultRequestHeaders.Add("UserId", user.Id.ToString());
         var content = new FormUrlEncodedContent(new Dictionary<string, string>
         {
             { "_token", await Utilities.GetCSRFToken(_client) },
@@ -139,7 +139,7 @@ public class ComplaintCreationTests : IClassFixture<CustomWebApplicationFactory<
     }
 
     [Fact]
-    public async Task ComplaintCannoBeCreatedByUnauthenticatedUser()
+    public async Task ComplaintCannotBeCreatedByUnauthenticatedUser()
     {
         using var scope = _factory.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
