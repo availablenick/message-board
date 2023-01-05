@@ -12,11 +12,6 @@ namespace MessageBoard.Controllers;
 [ValidateAntiForgeryToken]
 public class PostController : Controller
 {
-    public class PostDTO
-    {
-        public string Content { get; set; }
-    }
-
     private readonly MessageBoardDbContext _context;
 
     public PostController(MessageBoardDbContext context)
@@ -26,13 +21,8 @@ public class PostController : Controller
 
     [HttpPost]
     [Route("topics/{topicId}/posts")]
-    public async Task<IActionResult> Create(int topicId, PostDTO postDTO)
+    public async Task<IActionResult> Create(int topicId, string content)
     {
-        if (!ModelState.IsValid)
-        {
-            return UnprocessableEntity();
-        }
-
         var topic = await _context.Topics.FindAsync(topicId);
         if (topic == null)
         {
@@ -44,7 +34,12 @@ public class PostController : Controller
             return UnprocessableEntity();
         }
 
-        var post = await MakePost(topic, postDTO);
+        var post = await MakePost(topic, content);
+        if (!post.IsValid())
+        {
+            return UnprocessableEntity();
+        }
+
         await _context.Posts.AddAsync(post);
         await _context.SaveChangesAsync();
         return NoContent();
@@ -52,28 +47,28 @@ public class PostController : Controller
 
     [HttpPut]
     [Route("posts/{id}")]
-    public async Task<IActionResult> Update(int id, PostDTO postDTO)
+    public async Task<IActionResult> Update(int id, string content)
     {
-        var post = _context.Posts.Include(p => p.Author)
-            .FirstOrDefault(p => p.Id == id);
+        var post = await _context.Posts.FindAsync(id);
         if (post == null)
         {
             return NotFound();
         }
 
+        _context.Entry(post).Reference(p => p.Author).Load();
         if (!ResourceHandler.IsAuthorized(User, post.Author.Id) &&
             !User.IsInRole("Moderator"))
         {
             return Forbid();
         }
 
-        if (!ModelState.IsValid)
+        post.Content = content;
+        post.UpdatedAt = DateTime.Now;
+        if (!post.IsValid())
         {
             return UnprocessableEntity();
         }
 
-        post.Content = postDTO.Content;
-        post.UpdatedAt = DateTime.Now;
         _context.Posts.Update(post);
         await _context.SaveChangesAsync();
         return NoContent();
@@ -83,13 +78,13 @@ public class PostController : Controller
     [Route("posts/{id}")]
     public async Task<IActionResult> Delete(int id)
     {
-        var post = _context.Posts.Include(p => p.Author)
-            .FirstOrDefault(p => p.Id == id);
+        var post = await _context.Posts.FindAsync(id);
         if (post == null)
         {
             return NotFound();
         }
 
+        _context.Entry(post).Reference(p => p.Author).Load();
         if (!ResourceHandler.IsAuthorized(User, post.Author.Id) &&
             !User.IsInRole("Moderator"))
         {
@@ -101,12 +96,12 @@ public class PostController : Controller
         return NoContent();
     }
 
-    private async Task<Post> MakePost(Topic topic, PostDTO postDTO)
+    private async Task<Post> MakePost(Topic topic, string content)
     {
         var now = DateTime.Now;
         var post = new Post
         {
-            Content = postDTO.Content,
+            Content = content,
             CreatedAt = now,
             UpdatedAt = now,
             Author = await UserHandler.GetAuthenticatedUser(User, _context),
