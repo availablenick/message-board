@@ -8,6 +8,8 @@ using MessageBoard.Models;
 namespace MessageBoard.Controllers;
 
 [Route("bans")]
+[Authorize(Roles = "Moderator")]
+[ValidateAntiForgeryToken]
 public class BanController : Controller
 {
     public class BanDTO
@@ -24,8 +26,6 @@ public class BanController : Controller
     }
 
     [HttpPost]
-    [Authorize(Roles = "Moderator")]
-    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(string username, BanDTO banDTO)
     {
         var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == username);
@@ -47,8 +47,6 @@ public class BanController : Controller
 
     [HttpPut]
     [Route("{id}")]
-    [Authorize(Roles = "Moderator")]
-    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Update(int id, BanDTO banDTO)
     {
         var ban = await _context.Bans.FindAsync(id);
@@ -66,6 +64,21 @@ public class BanController : Controller
         }
 
         _context.Bans.Update(ban);
+        await _context.SaveChangesAsync();
+        return NoContent();
+    }
+
+    [HttpDelete]
+    [Route("{id}")]
+    public async Task<IActionResult> Delete(int id)
+    {
+        var ban = await _context.Bans.FindAsync(id);
+        if (ban == null)
+        {
+            return NotFound();
+        }
+
+        _context.Bans.Remove(ban);
         await _context.SaveChangesAsync();
         return NoContent();
     }
