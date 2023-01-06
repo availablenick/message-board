@@ -45,6 +45,31 @@ public class BanController : Controller
         return NoContent();
     }
 
+    [HttpPut]
+    [Route("{id}")]
+    [Authorize(Roles = "Moderator")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Update(int id, BanDTO banDTO)
+    {
+        var ban = await _context.Bans.FindAsync(id);
+        if (ban == null)
+        {
+            return NotFound();
+        }
+
+        ban.Reason = banDTO.Reason;
+        ban.ExpiresAt = banDTO.ExpiresAt;
+        ban.UpdatedAt = DateTime.Now;
+        if (!ban.IsValid())
+        {
+            return UnprocessableEntity();
+        }
+
+        _context.Bans.Update(ban);
+        await _context.SaveChangesAsync();
+        return NoContent();
+    }
+
     private Ban MakeBan(User user, BanDTO banDTO)
     {
         var now = DateTime.Now;
