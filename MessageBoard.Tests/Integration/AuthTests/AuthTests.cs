@@ -30,18 +30,12 @@ public class AuthTests : IClassFixture<WebApplicationFactory<Program>>
         var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
         dbContext.Database.EnsureDeleted();
         dbContext.Database.Migrate();
-        await _client.PostAsync("/users", new FormUrlEncodedContent(new Dictionary<string, string>
-        {
-            { "username", "test_username" },
-            { "email", "test@test.com" },
-            { "password", "test_password" },
-            { "passwordConfirmation", "test_password" },
-        }));
+        var user = await DataFactory.CreateUser(dbContext);
 
         var content = new FormUrlEncodedContent(new Dictionary<string, string>
         {
-            { "username", "test_username" },
-            { "password", "test_password" },
+            { "username", user.Username },
+            { "password", "password" },
         });
 
         var response1 = await _client.PostAsync("/login", content);
@@ -59,23 +53,12 @@ public class AuthTests : IClassFixture<WebApplicationFactory<Program>>
         var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
         dbContext.Database.EnsureDeleted();
         dbContext.Database.Migrate();
-        await _client.PostAsync("/users", new FormUrlEncodedContent(new Dictionary<string, string>
-        {
-            { "username", "test_username" },
-            { "email", "test@test.com" },
-            { "password", "test_password" },
-            { "passwordConfirmation", "test_password" },
-        }));
-
-        var user = dbContext.Users.FirstOrDefault(u => u.Username == "test_username");
-        user.Role = "Moderator";
-        dbContext.Users.Update(user);
-        await dbContext.SaveChangesAsync();
+        var user = await DataFactory.CreateUser(dbContext, role: "Moderator");
 
         var content = new FormUrlEncodedContent(new Dictionary<string, string>
         {
-            { "username", "test_username" },
-            { "password", "test_password" },
+            { "username", user.Username },
+            { "password", "password" },
         });
 
         var response1 = await _client.PostAsync("/login", content);
@@ -97,7 +80,7 @@ public class AuthTests : IClassFixture<WebApplicationFactory<Program>>
         var response = await _client.PostAsync("/login", new FormUrlEncodedContent(new Dictionary<string, string>
         {
             { "username", "test_username" },
-            { "password", "test_password" },
+            { "password", "password" },
         }));
 
         Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
@@ -110,19 +93,15 @@ public class AuthTests : IClassFixture<WebApplicationFactory<Program>>
         var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
         dbContext.Database.EnsureDeleted();
         dbContext.Database.Migrate();
-        await _client.PostAsync("/users", new FormUrlEncodedContent(new Dictionary<string, string>
-        {
-            { "username", "test_username" },
-            { "email", "test@test.com" },
-            { "password", "test_password" },
-            { "passwordConfirmation", "test_password" },
-        }));
+        var user = await DataFactory.CreateUser(dbContext);
 
-        var response = await _client.PostAsync("/login", new FormUrlEncodedContent(new Dictionary<string, string>
+        var content = new FormUrlEncodedContent(new Dictionary<string, string>
         {
-            { "username", "test_username" },
+            { "username", user.Username },
             { "password", "wrong_password" },
-        }));
+        });
+
+        var response = await _client.PostAsync("/login", content);
 
         Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
     }
@@ -134,18 +113,12 @@ public class AuthTests : IClassFixture<WebApplicationFactory<Program>>
         var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
         dbContext.Database.EnsureDeleted();
         dbContext.Database.Migrate();
-        await _client.PostAsync("/users", new FormUrlEncodedContent(new Dictionary<string, string>
-        {
-            { "username", "test_username" },
-            { "email", "test@test.com" },
-            { "password", "test_password" },
-            { "passwordConfirmation", "test_password" },
-        }));
+        var user = await DataFactory.CreateUser(dbContext);
 
         var content = new FormUrlEncodedContent(new Dictionary<string, string>
         {
-            { "username", "test_username" },
-            { "password", "test_password" },
+            { "username", user.Username },
+            { "password", "password" },
         });
 
         await _client.PostAsync("/login", content);
@@ -162,20 +135,13 @@ public class AuthTests : IClassFixture<WebApplicationFactory<Program>>
         var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
         dbContext.Database.EnsureDeleted();
         dbContext.Database.Migrate();
-        await _client.PostAsync("/users", new FormUrlEncodedContent(new Dictionary<string, string>
-        {
-            { "username", "test_username" },
-            { "email", "test@test.com" },
-            { "password", "test_password" },
-            { "passwordConfirmation", "test_password" },
-        }));
-
-        var user = dbContext.Users.FirstOrDefault(u => u.Username == "test_username");
+        var user = await DataFactory.CreateUser(dbContext);
         var ban = await DataFactory.CreateBan(dbContext, user);
+
         var content = new FormUrlEncodedContent(new Dictionary<string, string>
         {
-            { "username", "test_username" },
-            { "password", "test_password" },
+            { "username", user.Username },
+            { "password", "password" },
         });
 
         var response1 = await _client.PostAsync("/login", content);
@@ -193,18 +159,12 @@ public class AuthTests : IClassFixture<WebApplicationFactory<Program>>
         var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
         dbContext.Database.EnsureDeleted();
         dbContext.Database.Migrate();
-        await _client.PostAsync("/users", new FormUrlEncodedContent(new Dictionary<string, string>
-        {
-            { "username", "test_username" },
-            { "email", "test@test.com" },
-            { "password", "test_password" },
-            { "passwordConfirmation", "test_password" },
-        }));
+        var user = await DataFactory.CreateUser(dbContext);
 
         var content = new FormUrlEncodedContent(new Dictionary<string, string>
         {
-            { "username", "test_username" },
-            { "password", "test_password" },
+            { "username", user.Username },
+            { "password", "password" },
         });
 
         await _client.PostAsync("/login", content);
@@ -234,18 +194,12 @@ public class AuthTests : IClassFixture<WebApplicationFactory<Program>>
         var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
         dbContext.Database.EnsureDeleted();
         dbContext.Database.Migrate();
-        await _client.PostAsync("/users", new FormUrlEncodedContent(new Dictionary<string, string>
-        {
-            { "username", "test_username" },
-            { "email", "test@test.com" },
-            { "password", "test_password" },
-            { "passwordConfirmation", "test_password" },
-        }));
+        var user = await DataFactory.CreateUser(dbContext);
 
         var content = new FormUrlEncodedContent(new Dictionary<string, string>
         {
-            { "username", "test_username" },
-            { "password", "test_password" },
+            { "username", user.Username },
+            { "password", "password" },
         });
 
         await _client.PostAsync("/login", content);

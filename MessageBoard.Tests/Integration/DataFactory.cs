@@ -1,4 +1,5 @@
 using Bogus;
+using Microsoft.AspNetCore.Identity;
 
 using MessageBoard.Data;
 using MessageBoard.Models;
@@ -9,17 +10,21 @@ public class DataFactory
 {
     private static readonly Faker _faker = new Faker("en");
 
-    public static async Task<User> CreateUser(MessageBoardDbContext dbContext)
+    public static async Task<User> CreateUser(MessageBoardDbContext dbContext,
+        string? role = null)
     {
         var now = DateTime.Now;
         var user = new User
         {
             Username = _faker.Internet.UserName(),
             Email = _faker.Internet.Email(),
-            PasswordHash = "AQAAAAEAACcQAAAAEN0ui+14r0IDonYriVB5PTVPK7aW9VqXJGeQsBkEcmXFPTbOR5vFrMtyy1LTOAwWXg==",
+            Role = role,
             CreatedAt = now,
             UpdatedAt = now,
         };
+
+        var passwordHasher = new PasswordHasher<User>();
+        user.PasswordHash = passwordHasher.HashPassword(user, "password");
 
         await dbContext.Users.AddAsync(user);
         await dbContext.SaveChangesAsync();
