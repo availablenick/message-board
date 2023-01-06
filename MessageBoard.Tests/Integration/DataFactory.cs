@@ -124,4 +124,24 @@ public class DataFactory
 
         return complaint;
     }
+
+    public static async Task<Ban> CreateBan(MessageBoardDbContext dbContext,
+        User user = null)
+    {
+        var now = DateTime.Now;
+        var bannedUser = user ?? await CreateUser(dbContext);
+        var ban = new Ban
+        {
+            Reason = _faker.Lorem.Sentence(),
+            ExpiresAt = now,
+            CreatedAt = now,
+            UpdatedAt = now,
+            User = bannedUser,
+        };
+
+        await dbContext.Bans.AddAsync(ban);
+        await dbContext.SaveChangesAsync();
+
+        return ban;
+    }
 }

@@ -13,6 +13,7 @@ public class MessageBoardDbContext : DbContext
     public DbSet<Rateable> Rateables { get; set; }
     public DbSet<Rating> Ratings { get; set; }
     public DbSet<Complaint> Complaints { get; set; }
+    public DbSet<Ban> Bans { get; set; }
 
     public MessageBoardDbContext(DbContextOptions<MessageBoardDbContext> options)
         : base(options)
@@ -28,6 +29,12 @@ public class MessageBoardDbContext : DbContext
         modelBuilder.Entity<User>()
             .HasIndex(u => u.Email)
             .IsUnique();
+
+        modelBuilder.Entity<User>()
+            .HasOne(u => u.Ban)
+            .WithOne(b => b.User)
+            .HasForeignKey<Ban>(b => b.UserId);
+
 
         modelBuilder.Entity<Section>()
             .HasIndex(s => s.Name)

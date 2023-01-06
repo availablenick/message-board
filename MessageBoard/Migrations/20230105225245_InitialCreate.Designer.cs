@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MessageBoard.Migrations
 {
     [DbContext(typeof(MessageBoardDbContext))]
-    [Migration("20230105183349_InitialCreate")]
+    [Migration("20230105225245_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -24,6 +24,38 @@ namespace MessageBoard.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
+
+            modelBuilder.Entity("MessageBoard.Models.Ban", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId")
+                        .IsUnique();
+
+                    b.ToTable("Bans");
+                });
 
             modelBuilder.Entity("MessageBoard.Models.Complaint", b =>
                 {
@@ -231,6 +263,17 @@ namespace MessageBoard.Migrations
                     b.ToTable("Topics");
                 });
 
+            modelBuilder.Entity("MessageBoard.Models.Ban", b =>
+                {
+                    b.HasOne("MessageBoard.Models.User", "User")
+                        .WithOne("Ban")
+                        .HasForeignKey("MessageBoard.Models.Ban", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("MessageBoard.Models.Complaint", b =>
                 {
                     b.HasOne("MessageBoard.Models.User", "Author")
@@ -327,6 +370,8 @@ namespace MessageBoard.Migrations
 
             modelBuilder.Entity("MessageBoard.Models.User", b =>
                 {
+                    b.Navigation("Ban");
+
                     b.Navigation("Complaints");
 
                     b.Navigation("Posts");

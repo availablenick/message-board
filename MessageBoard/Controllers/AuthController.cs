@@ -34,8 +34,8 @@ public class AuthController : Controller
             return Forbid();
         }
 
-        var user = _context.Users.Where(u => u.Username == credentials.Username)
-            .FirstOrDefault();
+        var user = _context.Users
+            .FirstOrDefault(u => u.Username == credentials.Username);
 
         if (user == null)
         {
@@ -47,6 +47,12 @@ public class AuthController : Controller
             user, user.PasswordHash, credentials.Password);
 
         if (result != PasswordVerificationResult.Success)
+        {
+            return UnprocessableEntity();
+        }
+
+        _context.Entry(user).Reference(u => u.Ban).Load();
+        if (user.Ban != null)
         {
             return UnprocessableEntity();
         }

@@ -13,6 +13,7 @@ public class User
     public string? Role { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
+    public Ban? Ban { get; set; }
     public List<Topic> Topics { get; set; }
     public List<Post> Posts { get; set; }
     public List<Rating> Ratings { get; set; }

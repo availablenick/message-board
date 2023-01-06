@@ -62,6 +62,29 @@ namespace MessageBoard.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Bans",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Reason = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    ExpiresAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UserId = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Bans", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Bans_Users_UserId",
+                        column: x => x.UserId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Complaints",
                 columns: table => new
                 {
@@ -182,6 +205,12 @@ namespace MessageBoard.Migrations
                 });
 
             migrationBuilder.CreateIndex(
+                name: "IX_Bans_UserId",
+                table: "Bans",
+                column: "UserId",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Complaints_AuthorId",
                 table: "Complaints",
                 column: "AuthorId");
@@ -243,6 +272,9 @@ namespace MessageBoard.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropTable(
+                name: "Bans");
+
             migrationBuilder.DropTable(
                 name: "Complaints");
 
