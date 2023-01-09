@@ -41,12 +41,12 @@ public class TopicController : Controller
             return NotFound();
         }
 
-        if (!ModelState.IsValid)
+        var topic = await MakeTopic(section, topicDTO);
+        if (!topic.IsValid())
         {
             return UnprocessableEntity();
         }
 
-        var topic = await MakeTopic(section, topicDTO);
         await _context.Topics.AddAsync(topic);
         await _context.SaveChangesAsync();
         return NoContent();
@@ -69,14 +69,14 @@ public class TopicController : Controller
             return Forbid();
         }
 
-        if (!ModelState.IsValid)
+        topic.Title = topicDTO.Title;
+        topic.Content = topicDTO.Content;
+        topic.UpdatedAt = DateTime.Now;
+        if (!topic.IsValid())
         {
             return UnprocessableEntity();
         }
 
-        topic.Title = topicDTO.Title;
-        topic.Content = topicDTO.Content;
-        topic.UpdatedAt = DateTime.Now;
         _context.Topics.Update(topic);
         await _context.SaveChangesAsync();
         return NoContent();
