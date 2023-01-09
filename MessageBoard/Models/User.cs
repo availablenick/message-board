@@ -18,4 +18,6 @@ public class User
     public List<Post> Posts { get; set; }
     public List<Rating> Ratings { get; set; }
     public List<Complaint> Complaints { get; set; }
+    public List<PrivateMessage> CreatedPrivateMessages { get; set; }
+    public List<PrivateMessage> PrivateMessages { get; set; }
 }

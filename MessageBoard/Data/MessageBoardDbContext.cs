@@ -9,6 +9,8 @@ public class MessageBoardDbContext : DbContext
     public DbSet<User> Users { get; set; }
     public DbSet<Section> Sections { get; set; }
     public DbSet<Topic> Topics { get; set; }
+    public DbSet<PrivateMessage> PrivateMessages { get; set; }
+    public DbSet<Discussion> Discussions { get; set; }
     public DbSet<Post> Posts { get; set; }
     public DbSet<Rateable> Rateables { get; set; }
     public DbSet<Rating> Ratings { get; set; }
@@ -35,6 +37,9 @@ public class MessageBoardDbContext : DbContext
             .WithOne(b => b.User)
             .HasForeignKey<Ban>(b => b.UserId);
 
+        modelBuilder.Entity<User>()
+            .HasMany(u => u.CreatedPrivateMessages)
+            .WithOne(m => m.Author);
 
         modelBuilder.Entity<Section>()
             .HasIndex(s => s.Name)

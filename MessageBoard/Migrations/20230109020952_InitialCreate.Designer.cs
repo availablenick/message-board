@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MessageBoard.Migrations
 {
     [DbContext(typeof(MessageBoardDbContext))]
-    [Migration("20230105225245_InitialCreate")]
+    [Migration("20230109020952_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -219,6 +219,32 @@ namespace MessageBoard.Migrations
                     b.ToTable("Users");
                 });
 
+            modelBuilder.Entity("PrivateMessageUser", b =>
+                {
+                    b.Property<int>("PrivateMessagesId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("UsersId")
+                        .HasColumnType("int");
+
+                    b.HasKey("PrivateMessagesId", "UsersId");
+
+                    b.HasIndex("UsersId");
+
+                    b.ToTable("PrivateMessageUser");
+                });
+
+            modelBuilder.Entity("MessageBoard.Models.Discussion", b =>
+                {
+                    b.HasBaseType("MessageBoard.Models.Rateable");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.ToTable("Discussions");
+                });
+
             modelBuilder.Entity("MessageBoard.Models.Post", b =>
                 {
                     b.HasBaseType("MessageBoard.Models.Rateable");
@@ -226,19 +252,31 @@ namespace MessageBoard.Migrations
                     b.Property<int?>("AuthorId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("TopicId")
+                    b.Property<int?>("DiscussionId")
                         .HasColumnType("int");
 
                     b.HasIndex("AuthorId");
 
-                    b.HasIndex("TopicId");
+                    b.HasIndex("DiscussionId");
 
                     b.ToTable("Posts");
                 });
 
+            modelBuilder.Entity("MessageBoard.Models.PrivateMessage", b =>
+                {
+                    b.HasBaseType("MessageBoard.Models.Discussion");
+
+                    b.Property<int?>("AuthorId")
+                        .HasColumnType("int");
+
+                    b.HasIndex("AuthorId");
+
+                    b.ToTable("PrivateMessages");
+                });
+
             modelBuilder.Entity("MessageBoard.Models.Topic", b =>
                 {
-                    b.HasBaseType("MessageBoard.Models.Rateable");
+                    b.HasBaseType("MessageBoard.Models.Discussion");
 
                     b.Property<int?>("AuthorId")
                         .HasColumnType("int");
@@ -251,10 +289,6 @@ namespace MessageBoard.Migrations
 
                     b.Property<int>("SectionId")
                         .HasColumnType("int");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
 
                     b.HasIndex("AuthorId");
 
@@ -312,11 +346,39 @@ namespace MessageBoard.Migrations
                     b.Navigation("Target");
                 });
 
+            modelBuilder.Entity("PrivateMessageUser", b =>
+                {
+                    b.HasOne("MessageBoard.Models.PrivateMessage", null)
+                        .WithMany()
+                        .HasForeignKey("PrivateMessagesId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("MessageBoard.Models.User", null)
+                        .WithMany()
+                        .HasForeignKey("UsersId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MessageBoard.Models.Discussion", b =>
+                {
+                    b.HasOne("MessageBoard.Models.Rateable", null)
+                        .WithOne()
+                        .HasForeignKey("MessageBoard.Models.Discussion", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("MessageBoard.Models.Post", b =>
                 {
                     b.HasOne("MessageBoard.Models.User", "Author")
                         .WithMany("Posts")
                         .HasForeignKey("AuthorId");
+
+                    b.HasOne("MessageBoard.Models.Discussion", "Discussion")
+                        .WithMany("Posts")
+                        .HasForeignKey("DiscussionId");
 
                     b.HasOne("MessageBoard.Models.Rateable", null)
                         .WithOne()
@@ -324,13 +386,24 @@ namespace MessageBoard.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("MessageBoard.Models.Topic", "Topic")
-                        .WithMany("Posts")
-                        .HasForeignKey("TopicId");
-
                     b.Navigation("Author");
 
-                    b.Navigation("Topic");
+                    b.Navigation("Discussion");
+                });
+
+            modelBuilder.Entity("MessageBoard.Models.PrivateMessage", b =>
+                {
+                    b.HasOne("MessageBoard.Models.User", "Author")
+                        .WithMany("CreatedPrivateMessages")
+                        .HasForeignKey("AuthorId");
+
+                    b.HasOne("MessageBoard.Models.Discussion", null)
+                        .WithOne()
+                        .HasForeignKey("MessageBoard.Models.PrivateMessage", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Author");
                 });
 
             modelBuilder.Entity("MessageBoard.Models.Topic", b =>
@@ -339,7 +412,7 @@ namespace MessageBoard.Migrations
                         .WithMany("Topics")
                         .HasForeignKey("AuthorId");
 
-                    b.HasOne("MessageBoard.Models.Rateable", null)
+                    b.HasOne("MessageBoard.Models.Discussion", null)
                         .WithOne()
                         .HasForeignKey("MessageBoard.Models.Topic", "Id")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -374,6 +447,8 @@ namespace MessageBoard.Migrations
 
                     b.Navigation("Complaints");
 
+                    b.Navigation("CreatedPrivateMessages");
+
                     b.Navigation("Posts");
 
                     b.Navigation("Ratings");
@@ -381,7 +456,7 @@ namespace MessageBoard.Migrations
                     b.Navigation("Topics");
                 });
 
-            modelBuilder.Entity("MessageBoard.Models.Topic", b =>
+            modelBuilder.Entity("MessageBoard.Models.Discussion", b =>
                 {
                     b.Navigation("Posts");
                 });

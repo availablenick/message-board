@@ -52,8 +52,12 @@ public class PostDeleteTests : IClassFixture<CustomWebApplicationFactory<Program
                             select p;
 
             Assert.Null(postRecord.FirstOrDefault());
-            var freshUser = await dbContext.Users.Include(u => u.Posts).FirstAsync(u => u.Id == post.Author.Id);
-            var freshTopic = await dbContext.Topics.Include(t => t.Posts).FirstAsync(t => t.Id == post.Topic.Id);
+
+            var freshUser = await dbContext.Users.Include(u => u.Posts)
+                .FirstAsync(u => u.Id == post.Author.Id);
+            var freshTopic = await dbContext.Topics.Include(t => t.Posts)
+                .FirstAsync(t => t.Id == post.Discussion.Id);
+
             Assert.Empty(freshUser.Posts);
             Assert.Empty(freshTopic.Posts);
         }
@@ -87,8 +91,12 @@ public class PostDeleteTests : IClassFixture<CustomWebApplicationFactory<Program
                             select p;
 
             Assert.Null(postRecord.FirstOrDefault());
-            var freshUser = await dbContext.Users.Include(u => u.Posts).FirstAsync(u => u.Id == post.Author.Id);
-            var freshTopic = await dbContext.Topics.Include(t => t.Posts).FirstAsync(t => t.Id == post.Topic.Id);
+
+            var freshUser = await dbContext.Users.Include(u => u.Posts)
+                .FirstAsync(u => u.Id == post.Author.Id);
+            var freshTopic = await dbContext.Topics.Include(t => t.Posts)
+                .FirstAsync(t => t.Id == post.Discussion.Id);
+
             Assert.Empty(freshUser.Posts);
             Assert.Empty(freshTopic.Posts);
         }
@@ -202,8 +210,12 @@ public class PostDeleteTests : IClassFixture<CustomWebApplicationFactory<Program
                             select p;
 
             Assert.Null(postRecord.FirstOrDefault());
-            var freshUser = await dbContext.Users.Include(u => u.Posts).FirstAsync(u => u.Id == post.Author.Id);
-            var freshTopic = await dbContext.Topics.Include(t => t.Posts).FirstAsync(t => t.Id == post.Topic.Id);
+
+            var freshUser = await dbContext.Users.Include(u => u.Posts)
+                .FirstAsync(u => u.Id == post.Author.Id);
+            var freshTopic = await dbContext.Topics.Include(t => t.Posts)
+                .FirstAsync(t => t.Id == post.Discussion.Id);
+
             Assert.Empty(freshUser.Posts);
             Assert.Empty(freshTopic.Posts);
         }

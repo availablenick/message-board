@@ -62,6 +62,24 @@ namespace MessageBoard.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Discussions",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false),
+                    Title = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Discussions", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Discussions_Rateables_Id",
+                        column: x => x.Id,
+                        principalTable: "Rateables",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Bans",
                 columns: table => new
                 {
@@ -143,11 +161,62 @@ namespace MessageBoard.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Posts",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false),
+                    DiscussionId = table.Column<int>(type: "int", nullable: true),
+                    AuthorId = table.Column<int>(type: "int", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Posts", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Posts_Discussions_DiscussionId",
+                        column: x => x.DiscussionId,
+                        principalTable: "Discussions",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_Posts_Rateables_Id",
+                        column: x => x.Id,
+                        principalTable: "Rateables",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Posts_Users_AuthorId",
+                        column: x => x.AuthorId,
+                        principalTable: "Users",
+                        principalColumn: "Id");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "PrivateMessages",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false),
+                    AuthorId = table.Column<int>(type: "int", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_PrivateMessages", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_PrivateMessages_Discussions_Id",
+                        column: x => x.Id,
+                        principalTable: "Discussions",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_PrivateMessages_Users_AuthorId",
+                        column: x => x.AuthorId,
+                        principalTable: "Users",
+                        principalColumn: "Id");
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Topics",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false),
-                    Title = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     IsPinned = table.Column<bool>(type: "bit", nullable: false),
                     IsOpen = table.Column<bool>(type: "bit", nullable: false),
                     SectionId = table.Column<int>(type: "int", nullable: false),
@@ -157,9 +226,9 @@ namespace MessageBoard.Migrations
                 {
                     table.PrimaryKey("PK_Topics", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Topics_Rateables_Id",
+                        name: "FK_Topics_Discussions_Id",
                         column: x => x.Id,
-                        principalTable: "Rateables",
+                        principalTable: "Discussions",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
@@ -176,32 +245,27 @@ namespace MessageBoard.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Posts",
+                name: "PrivateMessageUser",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false),
-                    TopicId = table.Column<int>(type: "int", nullable: true),
-                    AuthorId = table.Column<int>(type: "int", nullable: true)
+                    PrivateMessagesId = table.Column<int>(type: "int", nullable: false),
+                    UsersId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Posts", x => x.Id);
+                    table.PrimaryKey("PK_PrivateMessageUser", x => new { x.PrivateMessagesId, x.UsersId });
                     table.ForeignKey(
-                        name: "FK_Posts_Rateables_Id",
-                        column: x => x.Id,
-                        principalTable: "Rateables",
+                        name: "FK_PrivateMessageUser_PrivateMessages_PrivateMessagesId",
+                        column: x => x.PrivateMessagesId,
+                        principalTable: "PrivateMessages",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_Posts_Topics_TopicId",
-                        column: x => x.TopicId,
-                        principalTable: "Topics",
-                        principalColumn: "Id");
-                    table.ForeignKey(
-                        name: "FK_Posts_Users_AuthorId",
-                        column: x => x.AuthorId,
+                        name: "FK_PrivateMessageUser_Users_UsersId",
+                        column: x => x.UsersId,
                         principalTable: "Users",
-                        principalColumn: "Id");
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateIndex(
@@ -226,9 +290,19 @@ namespace MessageBoard.Migrations
                 column: "AuthorId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Posts_TopicId",
+                name: "IX_Posts_DiscussionId",
                 table: "Posts",
-                column: "TopicId");
+                column: "DiscussionId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PrivateMessages_AuthorId",
+                table: "PrivateMessages",
+                column: "AuthorId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PrivateMessageUser_UsersId",
+                table: "PrivateMessageUser",
+                column: "UsersId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Ratings_OwnerId",
@@ -282,19 +356,28 @@ namespace MessageBoard.Migrations
                 name: "Posts");
 
             migrationBuilder.DropTable(
+                name: "PrivateMessageUser");
+
+            migrationBuilder.DropTable(
                 name: "Ratings");
 
             migrationBuilder.DropTable(
                 name: "Topics");
 
             migrationBuilder.DropTable(
-                name: "Rateables");
+                name: "PrivateMessages");
 
             migrationBuilder.DropTable(
                 name: "Sections");
 
             migrationBuilder.DropTable(
+                name: "Discussions");
+
+            migrationBuilder.DropTable(
                 name: "Users");
+
+            migrationBuilder.DropTable(
+                name: "Rateables");
         }
     }
 }

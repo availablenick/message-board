@@ -20,21 +20,21 @@ public class PostController : Controller
     }
 
     [HttpPost]
-    [Route("topics/{topicId}/posts")]
-    public async Task<IActionResult> Create(int topicId, string content)
+    [Route("discussions/{discussionId}/posts")]
+    public async Task<IActionResult> CreateInTopic(int discussionId, string content)
     {
-        var topic = await _context.Topics.FindAsync(topicId);
-        if (topic == null)
+        var discussion = await _context.Discussions.FindAsync(discussionId);
+        if (discussion == null)
         {
             return NotFound();
         }
 
-        if (!topic.IsOpen)
+        if (!discussion.CanBePostedOn())
         {
             return UnprocessableEntity();
         }
 
-        var post = await MakePost(topic, content);
+        var post = await MakePost(discussion, content);
         if (!post.IsValid())
         {
             return UnprocessableEntity();
@@ -96,7 +96,7 @@ public class PostController : Controller
         return NoContent();
     }
 
-    private async Task<Post> MakePost(Topic topic, string content)
+    private async Task<Post> MakePost(Discussion discussion, string content)
     {
         var now = DateTime.Now;
         var post = new Post
@@ -105,7 +105,7 @@ public class PostController : Controller
             CreatedAt = now,
             UpdatedAt = now,
             Author = await UserHandler.GetAuthenticatedUser(User, _context),
-            Topic = topic,
+            Discussion = discussion,
         };
 
         return post;

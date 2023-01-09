@@ -72,6 +72,28 @@ public class DataFactory
         return topic;
     }
 
+    public static async Task<PrivateMessage> CreatePrivateMessage(
+        MessageBoardDbContext dbContext)
+    {
+        var author = await CreateUser(dbContext);
+        var users = new List<User> { author, await CreateUser(dbContext) };
+        var now = DateTime.Now;
+        var message = new PrivateMessage
+        {
+            Title = _faker.Lorem.Sentence(),
+            Content = _faker.Lorem.Paragraph(),
+            CreatedAt = now,
+            UpdatedAt = now,
+            Author = author,
+            Users = users,
+        };
+
+        await dbContext.PrivateMessages.AddAsync(message);
+        await dbContext.SaveChangesAsync();
+
+        return message;
+    }
+
     public static async Task<Post> CreatePost(MessageBoardDbContext dbContext)
     {
         var now = DateTime.Now;
@@ -82,7 +104,7 @@ public class DataFactory
             CreatedAt = now,
             UpdatedAt = now,
             Author = topic.Author,
-            Topic = topic,
+            Discussion = topic,
         };
 
         await dbContext.Posts.AddAsync(post);

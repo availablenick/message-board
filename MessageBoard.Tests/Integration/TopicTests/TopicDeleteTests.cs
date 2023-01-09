@@ -172,9 +172,9 @@ public class TopicDeleteTests : IClassFixture<CustomWebApplicationFactory<Progra
             post = await DataFactory.CreatePost(dbContext);
         }
 
-        _client.DefaultRequestHeaders.Add("UserId", post.Topic.Author.Id.ToString());
+        _client.DefaultRequestHeaders.Add("UserId", post.Discussion.Author.Id.ToString());
         _client.DefaultRequestHeaders.Add("X-XSRF-TOKEN", await Utilities.GetCSRFToken(_client));
-        var response = await _client.DeleteAsync($"/topics/{post.Topic.Id}");
+        var response = await _client.DeleteAsync($"/topics/{post.Discussion.Id}");
 
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
         using (var scope = _factory.Services.CreateScope())
