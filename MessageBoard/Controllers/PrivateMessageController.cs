@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.Text.Json;
 
 using MessageBoard.Auth;
@@ -11,11 +12,17 @@ namespace MessageBoard.Controllers;
 [Route("messages")]
 public class PrivateMessageController : Controller
 {
-    public class PrivateMessageDTO
+    public class PrivateMessageCreationDTO
     {
         public string Title { get; set; }
         public string Content { get; set; }
         public string[] Usernames { get; set; }
+    }
+
+    public class PrivateMessageUpdateDTO
+    {
+        public string Title { get; set; }
+        public string Content { get; set; }
     }
 
     private readonly MessageBoardDbContext _context;
@@ -28,7 +35,7 @@ public class PrivateMessageController : Controller
     [HttpPost]
     [Authorize]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create(PrivateMessageDTO privateMessageDTO)
+    public async Task<IActionResult> Create(PrivateMessageCreationDTO privateMessageDTO)
     {
         var message = await MakePrivateMessage(privateMessageDTO);
         if (!message.IsValid())
@@ -40,7 +47,40 @@ public class PrivateMessageController : Controller
         await _context.SaveChangesAsync();
         return NoContent();
     }
-    
+
+    [HttpPut]
+    [Route("{id}")]
+    [Authorize]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Update(int id,
+        PrivateMessageUpdateDTO privateMessageDTO)
+    {
+        var message = await _context.PrivateMessages.FindAsync(id);
+        if (message == null)
+        {
+            return NotFound();
+        }
+
+        _context.Entry(message).Reference(m => m.Author).Load();
+        if (!ResourceHandler.IsAuthorized(User, message.Author.Id))
+        {
+            return Forbid();
+        }
+
+        _context.Entry(message).Collection(m => m.Users).Load();
+        message.Title = privateMessageDTO.Title;
+        message.Content = privateMessageDTO.Content;
+        message.UpdatedAt = DateTime.Now;
+        if (!message.IsValid())
+        {
+            return UnprocessableEntity();
+        }
+
+        _context.PrivateMessages.Update(message);
+        await _context.SaveChangesAsync();
+        return NoContent();
+    }
+
     private List<User> GetUsers(string[] usernames)
     {
         if (usernames == null)
@@ -64,7 +104,7 @@ public class PrivateMessageController : Controller
     }
 
     private async Task<PrivateMessage> MakePrivateMessage(
-        PrivateMessageDTO privateMessageDTO)
+        PrivateMessageCreationDTO privateMessageDTO)
     {
         var author = await UserHandler.GetAuthenticatedUser(User, _context);
         var users = GetUsers(privateMessageDTO.Usernames);
