@@ -56,13 +56,13 @@ public class TopicController : Controller
     [Route("topics/{id}")]
     public async Task<IActionResult> Update(int id, TopicDTO topicDTO)
     {
-        var topic = _context.Topics.Include(t => t.Author)
-            .FirstOrDefault(t => t.Id == id);
+        var topic = await _context.Topics.FindAsync(id);
         if (topic == null)
         {
             return NotFound();
         }
 
+        _context.Entry(topic).Reference(t => t.Author).Load();
         if (!ResourceHandler.IsAuthorized(User, topic.Author.Id) &&
             !User.IsInRole("Moderator"))
         {
@@ -93,13 +93,13 @@ public class TopicController : Controller
         }
 
         _context.Entry(topic).Reference(t => t.Author).Load();
-        _context.Entry(topic).Collection(t => t.Posts).Load();
         if (!ResourceHandler.IsAuthorized(User, topic.Author.Id) &&
             !User.IsInRole("Moderator"))
         {
             return Forbid();
         }
 
+        _context.Entry(topic).Collection(t => t.Posts).Load();
         _context.Rateables.RemoveRange(topic.Posts);
         _context.Topics.Remove(topic);
         await _context.SaveChangesAsync();
@@ -111,8 +111,7 @@ public class TopicController : Controller
     [Authorize(Roles = "Moderator")]
     public async Task<IActionResult> Update(int id, TopicStatusDTO topicDTO)
     {
-        var topic = _context.Topics.Include(t => t.Author)
-            .FirstOrDefault(t => t.Id == id);
+        var topic = await _context.Topics.FindAsync(id);
         if (topic == null)
         {
             return NotFound();
