@@ -10,6 +10,8 @@ using MessageBoard.Models;
 namespace MessageBoard.Controllers;
 
 [Route("messages")]
+[Authorize]
+[ValidateAntiForgeryToken]
 public class PrivateMessageController : Controller
 {
     public class PrivateMessageCreationDTO
@@ -33,8 +35,6 @@ public class PrivateMessageController : Controller
     }
 
     [HttpPost]
-    [Authorize]
-    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(PrivateMessageCreationDTO privateMessageDTO)
     {
         var message = await MakePrivateMessage(privateMessageDTO);
@@ -50,8 +50,6 @@ public class PrivateMessageController : Controller
 
     [HttpPut]
     [Route("{id}")]
-    [Authorize]
-    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Update(int id,
         PrivateMessageUpdateDTO privateMessageDTO)
     {
