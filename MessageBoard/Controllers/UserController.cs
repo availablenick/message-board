@@ -56,6 +56,11 @@ public class UserController : Controller
     [Route("new", Name = "UserNew")]
     public IActionResult Create()
     {
+        if (User.Identity.IsAuthenticated)
+        {
+            return Redirect("/");
+        }
+
         return View("Create");
     }
 

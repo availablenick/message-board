@@ -44,12 +44,15 @@ public class UserPageTests : IClassFixture<CustomWebApplicationFactory<Program>>
 
         var response = await _client.GetAsync("/users/new");
 
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+        Assert.Equal("/", response.Headers.Location.OriginalString);
     }
 
     [Fact]
     public async Task UserListPageCanBeAccessed()
     {
+        _client.DefaultRequestHeaders.Remove("Authorization");
+
         var response = await _client.GetAsync("/users");
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
