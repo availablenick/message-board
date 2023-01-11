@@ -92,6 +92,32 @@ public class SectionUpdateTests : IClassFixture<CustomWebApplicationFactory<Prog
     }
 
     [Fact]
+    public async Task SectionCannotBeUpdatedWithExistingName()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
+        dbContext.Database.EnsureDeleted();
+        dbContext.Database.Migrate();
+        var user = await DataFactory.CreateUser(dbContext);
+        var section1 = await DataFactory.CreateSection(dbContext);
+        var section2 = await DataFactory.CreateSection(dbContext);
+
+        _client.DefaultRequestHeaders.Add("UserId", user.Id.ToString());
+        _client.DefaultRequestHeaders.Add("Role", "Moderator");
+        var content = new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            { "_token", await Utilities.GetCSRFToken(_client) },
+            { "name", section2.Name },
+        });
+
+        var response = await _client.PutAsync($"/sections/{section1.Id}", content);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var sectionCount = await dbContext.Sections.CountAsync(s => s.Name == section2.Name);
+        Assert.Equal(1, sectionCount);
+    }
+
+    [Fact]
     public async Task SectionCannotBeUpdatedByUnauthenticatedUser()
     {
         using var scope = _factory.Services.CreateScope();

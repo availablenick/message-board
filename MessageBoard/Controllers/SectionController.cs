@@ -97,6 +97,16 @@ public class SectionController : Controller
             return View("Edit", section);
         }
 
+        var existingSection = _context.Sections
+            .Where(s => s.Id != section.Id && s.Name == sectionDTO.Name)
+            .FirstOrDefault();
+
+        if (existingSection != null)
+        {
+            ModelState.AddModelError("Name", "Name is already in use");
+            return View("Edit", section);
+        }
+
         section.Name = sectionDTO.Name;
         section.UpdatedAt = DateTime.Now;
 
