@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 
 using MessageBoard.Auth;
@@ -22,6 +23,7 @@ public class UserController : Controller
         public string Password { get; set; }
 
         [Compare("Password")]
+        [Display(Name = "Password confirmation")]
         public string PasswordConfirmation { get; set; }
         public IFormFile? Avatar { get; set; }
     }
@@ -42,7 +44,23 @@ public class UserController : Controller
         _context = context;
     }
 
+    [HttpGet]
+    [Route("", Name = "UserIndex")]
+    public async Task<IActionResult> Index()
+    {
+        var users = await _context.Users.Where(u => !u.IsDeleted).ToListAsync();
+        return View("Index", users);
+    }
+
+    [HttpGet]
+    [Route("new", Name = "UserNew")]
+    public IActionResult Create()
+    {
+        return View("Create");
+    }
+
     [HttpPost]
+    [Route("", Name = "UserCreate")]
     public async Task<IActionResult> Create(UserCreationDTO userDTO)
     {
         if (User.Identity.IsAuthenticated)
@@ -54,7 +72,7 @@ public class UserController : Controller
             !FileIsValid(userDTO.Avatar) ||
             !DataIsUnique(userDTO.Username, userDTO.Email))
         {
-            return UnprocessableEntity();
+            return View("Create");
         }
 
         var newUser = MakeUser(userDTO);
@@ -65,7 +83,7 @@ public class UserController : Controller
 
         await _context.Users.AddAsync(newUser);
         await _context.SaveChangesAsync();
-        return NoContent();
+        return RedirectToAction(nameof(Index));
     }
 
     [HttpPut]
@@ -139,6 +157,7 @@ public class UserController : Controller
         string extension = Path.GetExtension(file.FileName).ToLowerInvariant();
         if (string.IsNullOrEmpty(extension) || !allowedExtensions.Contains(extension))
         {
+            ModelState.AddModelError("Avatar", "File is not valid");
             return false;
         }
 
@@ -147,19 +166,22 @@ public class UserController : Controller
 
     private bool DataIsUnique(string username, string email, int? userId = null)
     {
+        bool isUnique = true;
         var user = _context.Users.Where(u => u.Username == username && u.Id != userId).FirstOrDefault();
         if (user != null)
         {
-            return false;
+            ModelState.AddModelError("Username", "Username is already in use");
+            isUnique = false;
         }
 
         user = _context.Users.Where(u => u.Email == email && u.Id != userId).FirstOrDefault();
         if (user != null)
         {
-            return false;
+            ModelState.AddModelError("Email", "Email is already in use");
+            isUnique = false;
         }
 
-        return true;
+        return isUnique;
     }
 
     private User MakeUser(UserCreationDTO userDTO)

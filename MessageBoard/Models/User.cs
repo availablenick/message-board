@@ -20,4 +20,9 @@ public class User
     public List<Complaint> Complaints { get; set; }
     public List<PrivateMessage> CreatedPrivateMessages { get; set; }
     public List<PrivateMessage> PrivateMessages { get; set; }
+
+    public string GetAvatarPath()
+    {
+        return Avatar ?? "images/default.jpg";
+    }
 }

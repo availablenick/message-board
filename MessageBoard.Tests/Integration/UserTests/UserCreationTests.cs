@@ -57,7 +57,8 @@ public class UserCreationTests : IClassFixture<CustomWebApplicationFactory<Progr
         var response = await _client.PostAsync("/users", content);
         DateTime timeAfterResponse = DateTime.Now;
 
-        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+        Assert.Equal("/users", response.Headers.Location.OriginalString);
         var userRecord = from u in dbContext.Users
                         where u.Username == "test_username" &&
                                 u.Email == "test@test.com"
@@ -92,7 +93,7 @@ public class UserCreationTests : IClassFixture<CustomWebApplicationFactory<Progr
 
         var response = await _client.PostAsync("/users", content);
 
-        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Equal(0, await dbContext.Users.CountAsync());
     }
 
@@ -115,7 +116,7 @@ public class UserCreationTests : IClassFixture<CustomWebApplicationFactory<Progr
 
         var response = await _client.PostAsync("/users", content);
 
-        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Equal(1, await dbContext.Users.CountAsync());
     }
 
@@ -136,7 +137,7 @@ public class UserCreationTests : IClassFixture<CustomWebApplicationFactory<Progr
 
         var response = await _client.PostAsync("/users", content);
 
-        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Equal(0, await dbContext.Users.CountAsync());
     }
 
@@ -158,7 +159,7 @@ public class UserCreationTests : IClassFixture<CustomWebApplicationFactory<Progr
 
         var response = await _client.PostAsync("/users", content);
 
-        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Equal(0, await dbContext.Users.CountAsync());
     }
 
@@ -181,7 +182,7 @@ public class UserCreationTests : IClassFixture<CustomWebApplicationFactory<Progr
 
         var response = await _client.PostAsync("/users", content);
 
-        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Equal(1, await dbContext.Users.CountAsync());
     }
 
@@ -201,7 +202,7 @@ public class UserCreationTests : IClassFixture<CustomWebApplicationFactory<Progr
 
         var response = await _client.PostAsync("/users", content);
 
-        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Equal(0, await dbContext.Users.CountAsync());
     }
 
@@ -223,7 +224,7 @@ public class UserCreationTests : IClassFixture<CustomWebApplicationFactory<Progr
 
         var response = await _client.PostAsync("/users", content);
 
-        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var userRecord = from u in dbContext.Users
                         where u.Username == "test_username" &&
                                 u.Email == "test@test.com"
@@ -266,7 +267,8 @@ public class UserCreationTests : IClassFixture<CustomWebApplicationFactory<Progr
             response = await _client.PostAsync("/users", multipartFormDataContent);
         }
 
-        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+        Assert.Equal("/users", response.Headers.Location.OriginalString);
         var userRecord = from u in dbContext.Users
                         where u.Username == "test_username" &&
                             u.Email == "test@test.com"
@@ -300,7 +302,8 @@ public class UserCreationTests : IClassFixture<CustomWebApplicationFactory<Progr
             response = await _client.PostAsync("/users", multipartFormDataContent);
         }
 
-        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+        Assert.Equal("/users", response.Headers.Location.OriginalString);
         var userRecord = from u in dbContext.Users
                         where u.Username == "test_username" &&
                             u.Email == "test@test.com"
@@ -334,7 +337,7 @@ public class UserCreationTests : IClassFixture<CustomWebApplicationFactory<Progr
             response = await _client.PostAsync("/users", multipartFormDataContent);
         }
 
-        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Equal(0, await dbContext.Users.CountAsync());
     }
 }

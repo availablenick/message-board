@@ -13,15 +13,15 @@ public class FileHandler : IFileHandler
 
     public string StoreFile(IFormFile file)
     {
-        string imageDirectory = $"{_env.ContentRootPath}Storage/Images";
+        string imageDirectory = $"{_env.WebRootPath}/images";
         if (!Directory.Exists(imageDirectory))
         {
             Directory.CreateDirectory(imageDirectory);
         }
 
         string fileExtension = Path.GetExtension(file.FileName).ToLowerInvariant();
-        string fileSubpath = $"Storage/Images/{Guid.NewGuid().ToString()}{fileExtension}";
-        string filepath = $"{_env.ContentRootPath}{fileSubpath}";
+        string fileSubpath = $"images/{Guid.NewGuid().ToString()}{fileExtension}";
+        string filepath = $"{_env.WebRootPath}/{fileSubpath}";
         using (var fileStream = File.Create(filepath))
         {
             file.CopyTo(fileStream);

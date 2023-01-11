@@ -1,0 +1,25 @@
+@section Title { User list }
+
+<div class="d-flex aligns-items-center justify-content-center bg-dark
+  text-light pt-5"
+>
+  <div>
+    <h1 class="fs-2 text-center">Users</h1>
+
+    <div class="mt-5">
+      @foreach (var user in Model)
+      {
+        <div>
+          <img style="height: auto; width: 100px" src='@($"{user.GetAvatarPath()}")' />
+          <span class="ms-3">Username: @user.Username</span>
+        </div>
+        <hr />
+      }
+
+      @if (Model.Count == 0)
+      {
+        <div>There are no registered users</div>
+      }
+    </div>
+  </div>
+</div>

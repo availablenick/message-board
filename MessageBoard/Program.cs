@@ -34,6 +34,18 @@ builder.Services.AddTransient<IFileHandler, FileHandler>();
 
 var app = builder.Build();
 
+if (app.Environment.IsDevelopment())
+{
+    using (var scope = app.Services.CreateScope())
+    {
+        var services = scope.ServiceProvider;
+        var dbContext = services.GetRequiredService<MessageBoardDbContext>();
+        dbContext.Database.EnsureCreated();
+
+        SeedData.Initialize(dbContext);
+    }
+}
+
 // Configure the HTTP request pipeline.
 app.UseStaticFiles();
 
