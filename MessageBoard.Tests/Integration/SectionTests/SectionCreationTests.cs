@@ -48,7 +48,8 @@ public class SectionCreationTests : IClassFixture<CustomWebApplicationFactory<Pr
         var response = await _client.PostAsync("/sections", content);
         DateTime timeAfterResponse = DateTime.Now;
 
-        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+        Assert.Equal("/", response.Headers.Location.OriginalString);
         var section = dbContext.Sections.FirstOrDefault(s => s.Name == "test_section");
         Assert.NotNull(section);
         Assert.True(section.CreatedAt.CompareTo(timeBeforeResponse) >= 0);
@@ -74,7 +75,7 @@ public class SectionCreationTests : IClassFixture<CustomWebApplicationFactory<Pr
 
         var response = await _client.PostAsync("/sections", content);
 
-        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Equal(0, await dbContext.Sections.CountAsync());
     }
 
@@ -98,7 +99,7 @@ public class SectionCreationTests : IClassFixture<CustomWebApplicationFactory<Pr
 
         var response = await _client.PostAsync("/sections", content);
 
-        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Equal(1, await dbContext.Sections.CountAsync());
     }
 

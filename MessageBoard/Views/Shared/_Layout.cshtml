@@ -4,13 +4,16 @@
     <meta charset="utf-8" />
     <title>@RenderSection("Title")</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/lib/fontawesome/css/fontawesome.css" />
+    <link rel="stylesheet" href="~/lib/fontawesome/css/brands.css" />
+    <link rel="stylesheet" href="~/lib/fontawesome/css/solid.css" />
     <link rel="stylesheet" href="~/css/site.css" />
   </head>
 
   <body>
     <div class="p-topbar">
       <div>
-        <a href="#">Home</a>
+        <a asp-route="Home">Home</a>
       </div>
 
       @if(User.Identity.IsAuthenticated) 

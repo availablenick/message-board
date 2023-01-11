@@ -5,7 +5,7 @@ using MessageBoard.Models;
 
 namespace MessageBoard.Data;
 
-public class DataFactory
+public class ModelFactory
 {
     private static readonly Faker _faker = new Faker("en");
 
@@ -45,5 +45,22 @@ public class DataFactory
         dbContext.SaveChanges();
 
         return user;
+    }
+
+    public static Section CreateSection(MessageBoardDbContext dbContext,
+        string name = null)
+    {
+        var now = DateTime.Now;
+        var section = new Section
+        {
+            Name = name ?? _faker.Lorem.Word(),
+            CreatedAt = now,
+            UpdatedAt = now,
+        };
+
+        dbContext.Sections.Add(section);
+        dbContext.SaveChanges();
+
+        return section;
     }
 }

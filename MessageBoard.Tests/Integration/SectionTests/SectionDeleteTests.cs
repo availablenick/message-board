@@ -42,7 +42,8 @@ public class SectionDeleteTests : IClassFixture<CustomWebApplicationFactory<Prog
         _client.DefaultRequestHeaders.Add("X-XSRF-TOKEN", await Utilities.GetCSRFToken(_client));
         var response = await _client.DeleteAsync($"/sections/{section.Id}");
 
-        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+        Assert.Equal("/", response.Headers.Location.OriginalString);
         Assert.Null(dbContext.Sections.FirstOrDefault(s => s.Id == section.Id));
     }
 
@@ -115,7 +116,8 @@ public class SectionDeleteTests : IClassFixture<CustomWebApplicationFactory<Prog
         _client.DefaultRequestHeaders.Add("X-XSRF-TOKEN", await Utilities.GetCSRFToken(_client));
         var response = await _client.DeleteAsync($"/sections/{((Topic) post.Discussion).Section.Id}");
 
-        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+        Assert.Equal("/", response.Headers.Location.OriginalString);
         using (var scope = _factory.Services.CreateScope())
         {
             var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
@@ -166,7 +168,8 @@ public class SectionDeleteTests : IClassFixture<CustomWebApplicationFactory<Prog
 
         var response = await _client.PostAsync($"/sections/{section.Id}", content);
 
-        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+        Assert.Equal("/", response.Headers.Location.OriginalString);
         using (var scope = _factory.Services.CreateScope())
         {
             var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();

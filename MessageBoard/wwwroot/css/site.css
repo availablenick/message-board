@@ -14,3 +14,10 @@ html, body, main {
   width: 100%;
   z-index: 99;
 }
+
+.p-section-box {
+  background: #111;
+  display: flex;
+  margin-top: 1rem;
+  width: 25rem;
+}

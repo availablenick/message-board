@@ -9,9 +9,13 @@ namespace MessageBoard.Controllers;
 
 [Route("sections")]
 [Authorize(Roles = "Moderator")]
-[ValidateAntiForgeryToken]
 public class SectionController : Controller
 {
+    public class SectionDTO
+    {
+        public string Name { get; set; }
+    }
+
     private readonly MessageBoardDbContext _context;
 
     public SectionController(MessageBoardDbContext context)
@@ -19,29 +23,68 @@ public class SectionController : Controller
         _context = context;
     }
 
-    [HttpPost]
-    public async Task<IActionResult> Create(string name)
+    [HttpGet]
+    [Route("/", Name = "Home")]
+    [AllowAnonymous]
+    public async Task<IActionResult> Index()
     {
-        var newSection = MakeSection(name);
-        if (!newSection.IsValid())
+        var sections = await _context.Sections
+            .Include(s => s.Topics)
+            .ToListAsync();
+
+        return View("Index", sections);
+    }
+
+    [HttpGet]
+    [Route("new", Name = "SectionNew")]
+    public IActionResult Create()
+    {
+        return View("Create");
+    }
+
+    [HttpGet]
+    [Route("{id}/edit", Name = "SectionEdit")]
+    public async Task<IActionResult> Edit(int id)
+    {
+        var section = await _context.Sections.FindAsync(id);
+        if (section == null)
         {
-            return UnprocessableEntity();
+            return View("Views/Error/404.cshtml");
         }
 
-        var section = _context.Sections.Where(s => s.Name == name).FirstOrDefault();
+        return View("Edit", section);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [Route("", Name = "SectionCreate")]
+    public async Task<IActionResult> Create(SectionDTO sectionDTO)
+    {
+        if (!ModelState.IsValid)
+        {
+            return View("Create");
+        }
+
+        var section = _context.Sections.Where(s => s.Name == sectionDTO.Name)
+            .FirstOrDefault();
+
         if (section != null)
         {
-            return UnprocessableEntity();
+            ModelState.AddModelError("Name", "Name is already in use");
+            return View("Create");
         }
+
+        var newSection = MakeSection(sectionDTO);
 
         await _context.Sections.AddAsync(newSection);
         await _context.SaveChangesAsync();
-        return NoContent();
+        return Redirect("/");
     }
 
     [HttpPut]
-    [Route("{id}")]
-    public async Task<IActionResult> Update(int id, string name)
+    [Route("{id}", Name = "SectionUpdate")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Update(int id, SectionDTO sectionDTO)
     {
         var section = await _context.Sections.FindAsync(id);
         if (section == null)
@@ -49,20 +92,22 @@ public class SectionController : Controller
             return NotFound();
         }
 
-        section.Name = name;
-        section.UpdatedAt = DateTime.Now;
-        if (!section.IsValid())
+        if (!ModelState.IsValid)
         {
-            return UnprocessableEntity();
+            return View("Edit", section);
         }
+
+        section.Name = sectionDTO.Name;
+        section.UpdatedAt = DateTime.Now;
 
         _context.Sections.Update(section);
         await _context.SaveChangesAsync();
-        return NoContent();
+        return Redirect("/");
     }
 
     [HttpDelete]
-    [Route("{id}")]
+    [Route("{id}", Name = "SectionDelete")]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Delete(int id)
     {
         var section = await _context.Sections.FindAsync(id);
@@ -85,15 +130,15 @@ public class SectionController : Controller
         _context.Rateables.RemoveRange(section.Topics);
         _context.Sections.Remove(section);
         await _context.SaveChangesAsync();
-        return NoContent();
+        return Redirect("/");
     }
 
-    private Section MakeSection(string name)
+    private Section MakeSection(SectionDTO sectionDTO)
     {
         var now = DateTime.Now;
         var section = new Section
         {
-            Name = name,
+            Name = sectionDTO.Name,
             CreatedAt = now,
             UpdatedAt = now,
         };

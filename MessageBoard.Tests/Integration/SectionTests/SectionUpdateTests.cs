@@ -53,7 +53,8 @@ public class SectionUpdateTests : IClassFixture<CustomWebApplicationFactory<Prog
         var response = await _client.PutAsync($"/sections/{section.Id}", content);
         DateTime timeAfterResponse = DateTime.Now;
 
-        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+        Assert.Equal("/", response.Headers.Location.OriginalString);
         using (var scope = _factory.Services.CreateScope())
         {
             var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
@@ -85,7 +86,7 @@ public class SectionUpdateTests : IClassFixture<CustomWebApplicationFactory<Prog
 
         var response = await _client.PutAsync($"/sections/{section.Id}", content);
 
-        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Null(dbContext.Sections
             .FirstOrDefault(s => s.Name == $"{section.Name}_edit"));
     }
@@ -210,7 +211,8 @@ public class SectionUpdateTests : IClassFixture<CustomWebApplicationFactory<Prog
         var response = await _client.PostAsync($"/sections/{section.Id}", content);
         DateTime timeAfterResponse = DateTime.Now;
 
-        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+        Assert.Equal("/", response.Headers.Location.OriginalString);
         using (var scope = _factory.Services.CreateScope())
         {
             var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();

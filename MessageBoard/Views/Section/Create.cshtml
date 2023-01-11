@@ -1,0 +1,33 @@
+@section Title { Create section }
+
+<div class="d-flex flex-column align-items-center justify-content-center h-100
+  bg-dark text-light"
+>
+  <h1 class="fs-2">Create section</h1>
+
+  <form class="w-50 p-4 mt-3" style="background: #15171a; box-shadow: 0 0 3px black"
+    asp-route="SectionCreate" method="post"
+  >
+    <div>
+      <label>Name</label>
+      <input class="text-light form-control" style="background: #111"
+        name="name"
+      />
+
+      @if (ViewData.ModelState["Name"] != null &&
+        ViewData.ModelState["Name"].Errors.Any())
+      {
+        @foreach (var error in ViewData.ModelState["Name"].Errors)
+        {
+          <div class="bg-danger mt-2 p-1">
+            @error.ErrorMessage
+          </div>
+        }
+      }
+    </div>
+
+    <div class="mt-5">
+      <button class="btn btn-dark w-100">Create</button>
+    </div>
+  </form>
+</div>

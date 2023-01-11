@@ -4,17 +4,23 @@ public class SeedData
 {
     public static void Initialize(MessageBoardDbContext context)
     {
-        if (context.Users.Any())
+        if (!context.Users.Any())
         {
-            return;
+            for (int i = 0; i < 5; ++i)
+            {
+                ModelFactory.CreateUser(context);
+            }
+
+            ModelFactory.CreateUser(context, "mod", "mod@mod.com", "Moderator");
+            ModelFactory.CreateUser(context, "ban", "ban@ban.com", null, true);
         }
 
-        for (int i = 0; i < 5; ++i)
+        if (!context.Sections.Any())
         {
-            DataFactory.CreateUser(context);
+            for (int i = 0; i < 5; ++i)
+            {
+                ModelFactory.CreateSection(context);
+            }
         }
-
-        DataFactory.CreateUser(context, "mod", "mod@mod.com", "Moderator");
-        DataFactory.CreateUser(context, "ban", "ban@ban.com", null, true);
     }
 }
