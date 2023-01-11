@@ -83,7 +83,7 @@ public class AuthTests : IClassFixture<WebApplicationFactory<Program>>
             { "password", "password" },
         }));
 
-        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
 
     [Fact]
@@ -103,7 +103,7 @@ public class AuthTests : IClassFixture<WebApplicationFactory<Program>>
 
         var response = await _client.PostAsync("/login", content);
 
-        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
 
     [Fact]
@@ -147,7 +147,7 @@ public class AuthTests : IClassFixture<WebApplicationFactory<Program>>
         var response1 = await _client.PostAsync("/login", content);
         var response2 = await _client.GetAsync("/secure-endpoint");
 
-        Assert.Equal(HttpStatusCode.UnprocessableEntity, response1.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, response1.StatusCode);
         Assert.Equal(HttpStatusCode.Redirect, response2.StatusCode);
         Assert.Contains("/login?returnUrl=", response2.Headers.Location.OriginalString);
     }

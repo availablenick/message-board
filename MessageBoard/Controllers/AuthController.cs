@@ -25,9 +25,21 @@ public class AuthController : Controller
         _context = context;
     }
 
+    [HttpGet]
+    [Route("login", Name = "AuthLogin")]
+    public IActionResult LogIn()
+    {
+        if (User.Identity.IsAuthenticated)
+        {
+            return Redirect("/");
+        }
+
+        return View("Login");
+    }
+
     [HttpPost]
-    [Route("login")]
-    public async Task<IActionResult> LogIn(Credentials credentials)
+    [Route("login", Name = "AuthAuthenticate")]
+    public async Task<IActionResult> Authenticate(Credentials credentials)
     {
         if (User.Identity.IsAuthenticated)
         {
@@ -39,7 +51,8 @@ public class AuthController : Controller
 
         if (user == null)
         {
-            return UnprocessableEntity();
+            ModelState.AddModelError("", "Username and password did not match");
+            return View("Login");
         }
 
         var passwordHasher = new PasswordHasher<User>();
@@ -48,13 +61,15 @@ public class AuthController : Controller
 
         if (result != PasswordVerificationResult.Success)
         {
-            return UnprocessableEntity();
+            ModelState.AddModelError("", "Username and password did not match");
+            return View("Login");
         }
 
         _context.Entry(user).Reference(u => u.Ban).Load();
         if (user.Ban != null)
         {
-            return UnprocessableEntity();
+            ModelState.AddModelError("", $"This user is banned. The ban will be lifted at {user.Ban.ExpiresAt.ToString()}");
+            return View("Login");
         }
 
         var claims = new List<Claim> {
@@ -77,7 +92,7 @@ public class AuthController : Controller
     }
 
     [HttpPost]
-    [Route("logout")]
+    [Route("logout", Name = "AuthLogout")]
     [Authorize]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> LogOut()

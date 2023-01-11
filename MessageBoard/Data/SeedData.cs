@@ -15,5 +15,6 @@ public class SeedData
         }
 
         DataFactory.CreateUser(context, "mod", "mod@mod.com", "Moderator");
+        DataFactory.CreateUser(context, "ban", "ban@ban.com", null, true);
     }
 }

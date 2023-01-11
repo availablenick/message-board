@@ -83,7 +83,7 @@ public class UserController : Controller
 
         await _context.Users.AddAsync(newUser);
         await _context.SaveChangesAsync();
-        return RedirectToAction(nameof(Index));
+        return Redirect("/login");
     }
 
     [HttpPut]
