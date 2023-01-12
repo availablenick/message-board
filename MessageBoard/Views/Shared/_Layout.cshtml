@@ -11,32 +11,38 @@
   </head>
 
   <body>
-    <div class="p-topbar">
-      <div>
-        <a asp-route="Home">Home</a>
-      </div>
+    <div class="container-fluid">
+      <div class="row h-100">
 
-      @if(User.Identity.IsAuthenticated) 
-      {
-        <form asp-route="AuthLogout" method="post">
-          <button class="btn btn-secondary">Logout</button>
-        </form>
-      }
-      else
-      {
-        <div>
-          <span>
-            <a asp-route="UserNew">Sign up</a>
-          </span>
+        <div class="p-topbar">
+          <div>
+            <a asp-route="Home">Home</a>
+          </div>
 
-          <span class="ms-3">
-            <a asp-route="AuthLogin">Login</a>
-          </span>
+          @if(User.Identity.IsAuthenticated) 
+          {
+            <form asp-route="AuthLogout" method="post">
+              <button class="btn btn-secondary">Logout</button>
+            </form>
+          }
+          else
+          {
+            <div>
+              <span>
+                <a asp-route="UserNew">Sign up</a>
+              </span>
+
+              <span class="ms-3">
+                <a asp-route="AuthLogin">Login</a>
+              </span>
+            </div>
+          }
         </div>
-      }
+
+        <main class="min-vh-100 text-light">
+          @RenderBody()
+        </main>
+      </div>
     </div>
-    <main style="padding-top: 3.5rem">
-      @RenderBody()
-    </main>
   </body>
 </html>

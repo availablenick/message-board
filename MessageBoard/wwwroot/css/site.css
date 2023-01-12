@@ -1,5 +1,14 @@
-html, body, main {
-  height: 100%;
+body {
+  background: rgb(30, 35, 40);
+}
+
+main {
+  display: flex;
+  padding-top: 3.5rem;
+}
+
+main > * {
+  flex: 1;
 }
 
 .p-topbar {
