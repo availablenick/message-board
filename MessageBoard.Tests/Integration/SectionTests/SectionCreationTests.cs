@@ -42,6 +42,7 @@ public class SectionCreationTests : IClassFixture<CustomWebApplicationFactory<Pr
         {
             { "_token", await Utilities.GetCSRFToken(_client) },
             { "name", "test_section" },
+            { "description", "test_description" },
         });
 
         DateTime timeBeforeResponse = DateTime.Now;
@@ -50,7 +51,10 @@ public class SectionCreationTests : IClassFixture<CustomWebApplicationFactory<Pr
 
         Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
         Assert.Equal("/", response.Headers.Location.OriginalString);
-        var section = dbContext.Sections.FirstOrDefault(s => s.Name == "test_section");
+        var section = dbContext.Sections
+            .FirstOrDefault(s => s.Name == "test_section" &&
+                s.Description == "test_description");
+
         Assert.NotNull(section);
         Assert.True(section.CreatedAt.CompareTo(timeBeforeResponse) >= 0);
         Assert.True(section.CreatedAt.CompareTo(timeAfterResponse) <= 0);
@@ -71,6 +75,30 @@ public class SectionCreationTests : IClassFixture<CustomWebApplicationFactory<Pr
         var content = new FormUrlEncodedContent(new Dictionary<string, string>
         {
             { "_token", await Utilities.GetCSRFToken(_client) },
+            { "description", "test_description" },
+        });
+
+        var response = await _client.PostAsync("/sections", content);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal(0, await dbContext.Sections.CountAsync());
+    }
+
+    [Fact]
+    public async Task SectionCannotBeCreatedWithoutDescription()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
+        dbContext.Database.EnsureDeleted();
+        dbContext.Database.Migrate();
+        var user = await DataFactory.CreateUser(dbContext);
+
+        _client.DefaultRequestHeaders.Add("UserId", user.Id.ToString());
+        _client.DefaultRequestHeaders.Add("Role", "Moderator");
+        var content = new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            { "_token", await Utilities.GetCSRFToken(_client) },
+            { "name", "test_section" },
         });
 
         var response = await _client.PostAsync("/sections", content);
@@ -95,6 +123,7 @@ public class SectionCreationTests : IClassFixture<CustomWebApplicationFactory<Pr
         {
             { "_token", await Utilities.GetCSRFToken(_client) },
             { "name", section.Name },
+            { "description", "test_description" },
         });
 
         var response = await _client.PostAsync("/sections", content);
@@ -115,6 +144,7 @@ public class SectionCreationTests : IClassFixture<CustomWebApplicationFactory<Pr
         var content = new FormUrlEncodedContent(new Dictionary<string, string>
         {
             { "name", "test_section" },
+            { "description", "test_description" },
         });
 
         var response = await _client.PostAsync("/sections", content);
@@ -137,6 +167,7 @@ public class SectionCreationTests : IClassFixture<CustomWebApplicationFactory<Pr
         {
             { "_token", await Utilities.GetCSRFToken(_client) },
             { "name", "test_section" },
+            { "description", "test_description" },
         });
 
         var response = await _client.PostAsync("/sections", content);
@@ -159,6 +190,7 @@ public class SectionCreationTests : IClassFixture<CustomWebApplicationFactory<Pr
         var content = new FormUrlEncodedContent(new Dictionary<string, string>
         {
             { "name", "test_section" },
+            { "description", "test_description" },
         });
 
         var response = await _client.PostAsync("/sections", content);

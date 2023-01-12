@@ -47,6 +47,7 @@ public class SectionUpdateTests : IClassFixture<CustomWebApplicationFactory<Prog
         {
             { "_token", await Utilities.GetCSRFToken(_client) },
             { "name", $"{section.Name}_edit" },
+            { "description", $"{section.Description}_edit" },
         });
 
         DateTime timeBeforeResponse = DateTime.Now;
@@ -59,7 +60,8 @@ public class SectionUpdateTests : IClassFixture<CustomWebApplicationFactory<Prog
         {
             var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
             var freshSection = dbContext.Sections
-                .FirstOrDefault(s => s.Name == $"{section.Name}_edit");
+                .FirstOrDefault(s => s.Name == $"{section.Name}_edit" &&
+                    s.Description == $"{section.Description}_edit");
 
             Assert.NotNull(freshSection);
             Assert.True(freshSection.UpdatedAt.CompareTo(timeBeforeResponse) >= 0);
@@ -82,13 +84,14 @@ public class SectionUpdateTests : IClassFixture<CustomWebApplicationFactory<Prog
         var content = new FormUrlEncodedContent(new Dictionary<string, string>
         {
             { "_token", await Utilities.GetCSRFToken(_client) },
+            { "description", $"{section.Description}_edit" },
         });
 
         var response = await _client.PutAsync($"/sections/{section.Id}", content);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Null(dbContext.Sections
-            .FirstOrDefault(s => s.Name == $"{section.Name}_edit"));
+            .FirstOrDefault(s => s.Description == $"{section.Description}_edit"));
     }
 
     [Fact]
@@ -118,6 +121,31 @@ public class SectionUpdateTests : IClassFixture<CustomWebApplicationFactory<Prog
     }
 
     [Fact]
+    public async Task SectionCannotBeUpdatedWithoutDescription()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
+        dbContext.Database.EnsureDeleted();
+        dbContext.Database.Migrate();
+        var user = await DataFactory.CreateUser(dbContext);
+        var section = await DataFactory.CreateSection(dbContext);
+
+        _client.DefaultRequestHeaders.Add("UserId", user.Id.ToString());
+        _client.DefaultRequestHeaders.Add("Role", "Moderator");
+        var content = new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            { "_token", await Utilities.GetCSRFToken(_client) },
+            { "name", $"{section.Name}_edit" },
+        });
+
+        var response = await _client.PutAsync($"/sections/{section.Id}", content);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Null(dbContext.Sections
+            .FirstOrDefault(s => s.Name == $"{section.Name}_edit"));
+    }
+
+    [Fact]
     public async Task SectionCannotBeUpdatedByUnauthenticatedUser()
     {
         using var scope = _factory.Services.CreateScope();
@@ -131,6 +159,7 @@ public class SectionUpdateTests : IClassFixture<CustomWebApplicationFactory<Prog
         var content = new FormUrlEncodedContent(new Dictionary<string, string>
         {
             { "name", $"{section.Name}_edit" },
+            { "description", $"{section.Description}_edit" },
         });
 
         var response = await _client.PutAsync($"/sections/{section.Id}", content);
@@ -155,6 +184,7 @@ public class SectionUpdateTests : IClassFixture<CustomWebApplicationFactory<Prog
         {
             { "_token", await Utilities.GetCSRFToken(_client) },
             { "name", $"{section.Name}_edit" },
+            { "description", $"{section.Description}_edit" },
         });
 
         var response = await _client.PutAsync($"/sections/{section.Id}", content);
@@ -179,6 +209,7 @@ public class SectionUpdateTests : IClassFixture<CustomWebApplicationFactory<Prog
         {
             { "_token", await Utilities.GetCSRFToken(_client) },
             { "name", "test_name" },
+            { "description", "test_description" },
         });
 
         var response = await _client.PutAsync("/sections/1", content);
@@ -201,6 +232,7 @@ public class SectionUpdateTests : IClassFixture<CustomWebApplicationFactory<Prog
         var content = new FormUrlEncodedContent(new Dictionary<string, string>
         {
             { "name", $"{section.Name}_edit" },
+            { "description", $"{section.Description}_edit" },
         });
 
         var response = await _client.PutAsync($"/sections/{section.Id}", content);
@@ -231,6 +263,7 @@ public class SectionUpdateTests : IClassFixture<CustomWebApplicationFactory<Prog
             { "_method", "PUT" },
             { "_token", await Utilities.GetCSRFToken(_client) },
             { "name", $"{section.Name}_edit" },
+            { "description", $"{section.Description}_edit" },
         });
 
         DateTime timeBeforeResponse = DateTime.Now;

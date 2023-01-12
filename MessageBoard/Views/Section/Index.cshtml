@@ -3,7 +3,7 @@
 @section Title { Home }
 
 <div class="d-flex aligns-items-center justify-content-center bg-dark
-  text-light pt-5 h-100"
+  text-light py-5 h-100"
 >
   <div>
     <h1 class="fs-2 text-center">Sections</h1>
@@ -13,7 +13,10 @@
       {
         <div class="p-section-box">
           <div class="d-flex justify-content-between flex-grow-1 p-3">
-            <a href="#">@sectionItem.Name</a>
+            <div>
+              <a href="#">@sectionItem.Name</a>
+              <div>@sectionItem.Description</div>
+            </div>
 
             @if (User.IsInRole("Moderator"))
             {

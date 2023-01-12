@@ -54,6 +54,7 @@ public class ModelFactory
         var section = new Section
         {
             Name = name ?? _faker.Lorem.Word(),
+            Description = _faker.Lorem.Sentence(),
             CreatedAt = now,
             UpdatedAt = now,
         };

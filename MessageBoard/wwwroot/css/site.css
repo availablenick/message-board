@@ -19,5 +19,5 @@ html, body, main {
   background: #111;
   display: flex;
   margin-top: 1rem;
-  width: 25rem;
+  min-width: 25rem;
 }

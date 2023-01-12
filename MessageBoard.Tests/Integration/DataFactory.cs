@@ -38,6 +38,7 @@ public class DataFactory
         var section = new Section
         {
             Name = _faker.Lorem.Word(),
+            Description = _faker.Lorem.Sentence(),
             CreatedAt = now,
             UpdatedAt = now,
         };

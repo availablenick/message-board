@@ -14,6 +14,7 @@ public class SectionController : Controller
     public class SectionDTO
     {
         public string Name { get; set; }
+        public string Description { get; set; }
     }
 
     private readonly MessageBoardDbContext _context;
@@ -108,6 +109,7 @@ public class SectionController : Controller
         }
 
         section.Name = sectionDTO.Name;
+        section.Description = sectionDTO.Description;
         section.UpdatedAt = DateTime.Now;
 
         _context.Sections.Update(section);
@@ -149,6 +151,7 @@ public class SectionController : Controller
         var section = new Section
         {
             Name = sectionDTO.Name,
+            Description = sectionDTO.Description,
             CreatedAt = now,
             UpdatedAt = now,
         };

@@ -26,6 +26,24 @@
       }
     </div>
 
+    <div class="mt-3">
+      <label>Description</label>
+      <textarea class="text-light form-control" style="background: #111"
+        name="description"
+      ></textarea>
+
+      @if (ViewData.ModelState["Description"] != null &&
+        ViewData.ModelState["Description"].Errors.Any())
+      {
+        @foreach (var error in ViewData.ModelState["Description"].Errors)
+        {
+          <div class="bg-danger mt-2 p-1">
+            @error.ErrorMessage
+          </div>
+        }
+      }
+    </div>
+
     <div class="mt-5">
       <button class="btn btn-dark w-100">Create</button>
     </div>
