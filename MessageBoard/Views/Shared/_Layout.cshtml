@@ -19,11 +19,17 @@
             <a asp-route="Home">Home</a>
           </div>
 
-          @if(User.Identity.IsAuthenticated) 
+          @if(User.Identity.IsAuthenticated)
           {
-            <form asp-route="AuthLogout" method="post">
-              <button class="btn btn-secondary">Logout</button>
-            </form>
+            <div>
+              <a asp-route="UserShow"
+                asp-route-id="@User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier).Value"
+              >
+                @User.Identity.Name</a>
+              <form class="d-inline-block ms-3" asp-route="AuthLogout" method="post">
+                <button class="btn btn-secondary">Logout</button>
+              </form>
+            </div>
           }
           else
           {

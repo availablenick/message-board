@@ -1,0 +1,72 @@
+@model User
+
+@section Title { Edit user @Model.Username }
+
+<div class="d-flex flex-column align-items-center justify-content-center">
+  <h1 class="fs-2">Edit user @Model.Username</h1>
+
+  <form class="w-50 p-4 mt-3" style="background: #15171a; box-shadow: 0 0 3px black"
+    asp-route="UserUpdate" asp-route-id="@Model.Id" method="post" enctype="multipart/form-data"
+  >
+    <input type="hidden" name="_method" value="PUT" />
+    <div>
+      <label>Username</label>
+      <input class="text-light form-control" style="background: #111"
+        name="username" value="@Model.Username"
+      />
+
+      @if (ViewData.ModelState["Username"] != null &&
+        ViewData.ModelState["Username"].Errors.Any())
+      {
+        @foreach (var error in ViewData.ModelState["Username"].Errors)
+        {
+          <div class="bg-danger mt-2 p-1">
+            @error.ErrorMessage
+          </div>
+        }
+      }
+    </div>
+
+    <div class="mt-3">
+      <label>Email</label>
+      <input class="text-light form-control" style="background: #111"
+        name="email" value="@Model.Email"
+      />
+
+      @if (ViewData.ModelState["Email"] != null &&
+        ViewData.ModelState["Email"].Errors.Any())
+      {
+        @foreach (var error in ViewData.ModelState["Email"].Errors)
+        {
+          <div class="bg-danger mt-2 p-1">
+            @error.ErrorMessage
+          </div>
+        }
+      }
+    </div>
+
+    <div class="mt-3">
+      <label>Avatar</label>
+      <input type="file" class="text-light form-control" style="background: #111"
+        name="avatar"
+      />
+
+      <img class="mt-3 img-fluid" style="width: 50px" src='@($"/{Model.GetAvatarPath()}")' />
+
+      @if (ViewData.ModelState["Avatar"] != null &&
+        ViewData.ModelState["Avatar"].Errors.Any())
+      {
+        @foreach (var error in ViewData.ModelState["Avatar"].Errors)
+        {
+          <div class="bg-danger mt-2 p-1">
+            @error.ErrorMessage
+          </div>
+        }
+      }
+    </div>
+
+    <div class="mt-5">
+      <button class="btn btn-dark w-100">Edit</button>
+    </div>
+  </form>
+</div>

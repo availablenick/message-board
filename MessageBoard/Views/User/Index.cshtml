@@ -1,6 +1,6 @@
 @section Title { User list }
 
-<div class="d-flex aligns-items-center justify-content-center pt-5">
+<div class="d-flex align-items-center justify-content-center pt-5">
   <div>
     <h1 class="fs-2 text-center">Users</h1>
 
@@ -9,7 +9,9 @@
       {
         <div>
           <img style="height: auto; width: 100px" src='@($"/{user.GetAvatarPath()}")' />
-          <span class="ms-3">Username: @user.Username</span>
+          <a class="ms-3" asp-route="UserShow" asp-route-id="@user.Id">
+            Username: @user.Username
+          </a>
         </div>
         <hr />
       }

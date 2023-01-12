@@ -53,6 +53,16 @@ public class UserController : Controller
     }
 
     [HttpGet]
+    [Route("{id}", Name = "UserShow")]
+    public async Task<IActionResult> Show(int id)
+    {
+        var user = await _context.Users.FindAsync(id);
+        _context.Entry(user).Collection(u => u.Topics).Load();
+        _context.Entry(user).Collection(u => u.Posts).Load();
+        return View("Details", user);
+    }
+
+    [HttpGet]
     [Route("new", Name = "UserNew")]
     public IActionResult Create()
     {
@@ -73,8 +83,8 @@ public class UserController : Controller
             return Redirect("/");
         }
 
-        if (!ModelState.IsValid ||
-            !FileIsValid(userDTO.Avatar) ||
+        if (!FileIsValid(userDTO.Avatar) ||
+            !ModelState.IsValid ||
             !DataIsUnique(userDTO.Username, userDTO.Email))
         {
             return View("Create");
@@ -91,8 +101,27 @@ public class UserController : Controller
         return Redirect("/login");
     }
 
+    [HttpGet]
+    [Route("{id}/edit", Name = "UserEdit")]
+    [Authorize]
+    public async Task<IActionResult> Edit(int id)
+    {
+        var user = await _context.Users.FindAsync(id);
+        if (user == null)
+        {
+            return View("Views/Error/404.cshtml");
+        }
+
+        if (!ResourceHandler.IsAuthorized(User, id))
+        {
+            return Forbid();
+        }
+
+        return View("Edit", user);
+    }
+
     [HttpPut]
-    [Route("{id}")]
+    [Route("{id}", Name = "UserUpdate")]
     [Authorize]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Update(int id, UserUpdateDTO userDTO)
@@ -108,11 +137,11 @@ public class UserController : Controller
             return Forbid();
         }
 
-        if (!ModelState.IsValid ||
-            !FileIsValid(userDTO.Avatar) ||
+        if (!FileIsValid(userDTO.Avatar) ||
+            !ModelState.IsValid ||
             !DataIsUnique(userDTO.Username, userDTO.Email, id))
         {
-            return UnprocessableEntity();   
+            return View("Edit", user);
         }
 
         user.Username = userDTO.Username;
@@ -125,7 +154,7 @@ public class UserController : Controller
 
         _context.Users.Update(user);
         await _context.SaveChangesAsync();
-        return NoContent();
+        return RedirectToAction(nameof(Show), new { id = id });
     }
 
     [HttpDelete]

@@ -58,7 +58,7 @@ public class UserCreationTests : IClassFixture<CustomWebApplicationFactory<Progr
         DateTime timeAfterResponse = DateTime.Now;
 
         Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
-        Assert.Equal("/users", response.Headers.Location.OriginalString);
+        Assert.Equal("/login", response.Headers.Location.OriginalString);
         var userRecord = from u in dbContext.Users
                         where u.Username == "test_username" &&
                                 u.Email == "test@test.com"
@@ -268,7 +268,7 @@ public class UserCreationTests : IClassFixture<CustomWebApplicationFactory<Progr
         }
 
         Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
-        Assert.Equal("/users", response.Headers.Location.OriginalString);
+        Assert.Equal("/login", response.Headers.Location.OriginalString);
         var userRecord = from u in dbContext.Users
                         where u.Username == "test_username" &&
                             u.Email == "test@test.com"
@@ -303,7 +303,7 @@ public class UserCreationTests : IClassFixture<CustomWebApplicationFactory<Progr
         }
 
         Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
-        Assert.Equal("/users", response.Headers.Location.OriginalString);
+        Assert.Equal("/login", response.Headers.Location.OriginalString);
         var userRecord = from u in dbContext.Users
                         where u.Username == "test_username" &&
                             u.Email == "test@test.com"

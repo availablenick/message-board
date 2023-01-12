@@ -65,7 +65,8 @@ public class UserUpdateTests : IClassFixture<CustomWebApplicationFactory<Program
         var response = await _client.PutAsync($"/users/{newUser.Id}", content);
         var timeAfterResponse = DateTime.Now;
 
-        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+        Assert.Equal($"/users/{newUser.Id}", response.Headers.Location.OriginalString);
         using (var scope = _factory.Services.CreateScope())
         {
             var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
@@ -99,7 +100,7 @@ public class UserUpdateTests : IClassFixture<CustomWebApplicationFactory<Program
 
         var response = await _client.PutAsync($"/users/{newUser.Id}", content);
 
-        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var userRecord = from u in dbContext.Users
                         where u.Email == $"edit_{newUser.Email}"
                         select u;
@@ -127,7 +128,7 @@ public class UserUpdateTests : IClassFixture<CustomWebApplicationFactory<Program
 
         var response = await _client.PutAsync($"/users/{user1.Id}", content);
 
-        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var userCount = await dbContext.Users.CountAsync(u => u.Username == user2.Username);
         Assert.Equal(1, userCount);
     }
@@ -151,7 +152,8 @@ public class UserUpdateTests : IClassFixture<CustomWebApplicationFactory<Program
 
         var response = await _client.PutAsync($"/users/{newUser.Id}", content);
 
-        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+        Assert.Equal($"/users/{newUser.Id}", response.Headers.Location.OriginalString);
         var userRecord = from u in dbContext.Users
                         where u.Username == newUser.Username &&
                             u.Email == $"edit_{newUser.Email}"
@@ -178,7 +180,7 @@ public class UserUpdateTests : IClassFixture<CustomWebApplicationFactory<Program
 
         var response = await _client.PutAsync($"/users/{newUser.Id}", content);
 
-        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var userRecord = from u in dbContext.Users
                         where u.Username == $"{newUser.Username}_edit"
                         select u;
@@ -206,7 +208,7 @@ public class UserUpdateTests : IClassFixture<CustomWebApplicationFactory<Program
 
         var response = await _client.PutAsync($"/users/{user1.Id}", content);
 
-        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var userCount = await dbContext.Users.CountAsync(u => u.Email == user2.Email);
         Assert.Equal(1, userCount);
     }
@@ -230,7 +232,8 @@ public class UserUpdateTests : IClassFixture<CustomWebApplicationFactory<Program
 
         var response = await _client.PutAsync($"/users/{newUser.Id}", content);
 
-        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+        Assert.Equal($"/users/{newUser.Id}", response.Headers.Location.OriginalString);
         var userRecord = from u in dbContext.Users
                         where u.Username == $"{newUser.Username}_edit" &&
                             u.Email == newUser.Email
@@ -343,7 +346,8 @@ public class UserUpdateTests : IClassFixture<CustomWebApplicationFactory<Program
             response = await _client.PutAsync($"/users/{newUser.Id}", content);
         }
 
-        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+        Assert.Equal($"/users/{newUser.Id}", response.Headers.Location.OriginalString);
         using (var scope = _factory.Services.CreateScope())
         {
             var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
@@ -385,7 +389,8 @@ public class UserUpdateTests : IClassFixture<CustomWebApplicationFactory<Program
             response = await _client.PutAsync($"/users/{newUser.Id}", content);
         }
 
-        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+        Assert.Equal($"/users/{newUser.Id}", response.Headers.Location.OriginalString);
         using (var scope = _factory.Services.CreateScope())
         {
             var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
@@ -424,7 +429,7 @@ public class UserUpdateTests : IClassFixture<CustomWebApplicationFactory<Program
             response = await _client.PutAsync($"/users/{newUser.Id}", content);
         }
 
-        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var userRecord = from u in dbContext.Users
                         where u.Username == $"{newUser.Username}_edit" &&
                                 u.Email == $"edit_{newUser.Email}"
@@ -481,7 +486,8 @@ public class UserUpdateTests : IClassFixture<CustomWebApplicationFactory<Program
 
         var response = await _client.PostAsync($"/users/{newUser.Id}", content);
 
-        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+        Assert.Equal($"/users/{newUser.Id}", response.Headers.Location.OriginalString);
         var userRecord = from u in dbContext.Users
                         where u.Username == $"{newUser.Username}_edit" &&
                                 u.Email == $"edit_{newUser.Email}"
