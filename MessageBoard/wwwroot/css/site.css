@@ -3,7 +3,9 @@ body {
 }
 
 main {
+  color: #fff;
   display: flex;
+  min-height: 100vh;
   padding-top: 3.5rem;
 }
 
