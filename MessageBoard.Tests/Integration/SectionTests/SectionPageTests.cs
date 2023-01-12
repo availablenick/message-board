@@ -43,12 +43,9 @@ public class SectionPageTests : IClassFixture<CustomWebApplicationFactory<Progra
     [Fact]
     public async Task SectionCreationPageCanBeAccessed()
     {
-        using var scope = _factory.Services.CreateScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
-        dbContext.Database.EnsureCreated();
-
         _client.DefaultRequestHeaders.Add("UserId", "1");
         _client.DefaultRequestHeaders.Add("Role", "Moderator");
+
         var response = await _client.GetAsync("/sections/new");
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -57,11 +54,8 @@ public class SectionPageTests : IClassFixture<CustomWebApplicationFactory<Progra
     [Fact]
     public async Task SectionCreationPageCannotBeAccessedByRegularUser()
     {
-        using var scope = _factory.Services.CreateScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
-        dbContext.Database.EnsureCreated();
-
         _client.DefaultRequestHeaders.Add("UserId", "1");
+
         var response = await _client.GetAsync("/sections/new");
 
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
@@ -88,6 +82,8 @@ public class SectionPageTests : IClassFixture<CustomWebApplicationFactory<Progra
     {
         using var scope = _factory.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
+        dbContext.Database.EnsureDeleted();
+        dbContext.Database.Migrate();
         var section = await DataFactory.CreateSection(dbContext);
 
         _client.DefaultRequestHeaders.Add("UserId", "1");
