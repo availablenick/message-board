@@ -49,7 +49,6 @@ public class TopicCreationTests : IClassFixture<CustomWebApplicationFactory<Prog
         var response = await _client.PostAsync($"/sections/{section.Id}/topics", content);
         DateTime timeAfterResponse = DateTime.Now;
 
-        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
         var topicRecord = from t in dbContext.Topics
                         where t.Title == "test_title" &&
                                 t.Content == "test_content"
@@ -57,6 +56,10 @@ public class TopicCreationTests : IClassFixture<CustomWebApplicationFactory<Prog
 
         var topic = topicRecord.FirstOrDefault();
         Assert.NotNull(topic);
+
+        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+        Assert.Equal($"/topics/{topic.Id}", response.Headers.Location.OriginalString);
+
         Assert.Equal(user.Id, topic.Author.Id);
         Assert.Equal(section.Id, topic.Section.Id);
         Assert.True(user.Topics.Exists(t => t.Id == topic.Id));
@@ -87,7 +90,7 @@ public class TopicCreationTests : IClassFixture<CustomWebApplicationFactory<Prog
 
         var response = await _client.PostAsync($"sections/{section.Id}/topics", content);
 
-        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Equal(0, await dbContext.Topics.CountAsync());
     }
 
@@ -110,7 +113,7 @@ public class TopicCreationTests : IClassFixture<CustomWebApplicationFactory<Prog
 
         var response = await _client.PostAsync($"sections/{section.Id}/topics", content);
 
-        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Equal(0, await dbContext.Topics.CountAsync());
     }
 

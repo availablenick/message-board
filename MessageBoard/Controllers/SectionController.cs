@@ -37,6 +37,22 @@ public class SectionController : Controller
     }
 
     [HttpGet]
+    [Route("{id}", Name = "SectionShow")]
+    [AllowAnonymous]
+    public async Task<IActionResult> Show(int id)
+    {
+        var section = await _context.Sections.FindAsync(id);
+        _context.Entry(section)
+            .Collection(s => s.Topics)
+            .Query()
+            .Include(t => t.Author)
+            .Include(t => t.Posts)
+            .Load();
+
+        return View("Show", section);
+    }
+
+    [HttpGet]
     [Route("new", Name = "SectionNew")]
     public IActionResult Create()
     {

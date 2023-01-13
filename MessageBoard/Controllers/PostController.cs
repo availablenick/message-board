@@ -20,8 +20,8 @@ public class PostController : Controller
     }
 
     [HttpPost]
-    [Route("discussions/{discussionId}/posts")]
-    public async Task<IActionResult> CreateInTopic(int discussionId, string content)
+    [Route("discussions/{discussionId}/posts", Name = "PostCreate")]
+    public async Task<IActionResult> Create(int discussionId, string content)
     {
         var discussion = await _context.Discussions.FindAsync(discussionId);
         if (discussion == null)

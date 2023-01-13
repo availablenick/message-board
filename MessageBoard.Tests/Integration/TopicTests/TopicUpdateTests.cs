@@ -51,7 +51,8 @@ public class TopicUpdateTests : IClassFixture<CustomWebApplicationFactory<Progra
         var response = await _client.PutAsync($"/topics/{newTopic.Id}", content);
         DateTime timeAfterResponse = DateTime.Now;
 
-        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+        Assert.Equal($"/topics/{newTopic.Id}", response.Headers.Location.OriginalString);
         using (var scope = _factory.Services.CreateScope())
         {
             var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
@@ -94,7 +95,8 @@ public class TopicUpdateTests : IClassFixture<CustomWebApplicationFactory<Progra
         var response = await _client.PutAsync($"/topics/{newTopic.Id}", content);
         DateTime timeAfterResponse = DateTime.Now;
 
-        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+        Assert.Equal($"/topics/{newTopic.Id}", response.Headers.Location.OriginalString);
         using (var scope = _factory.Services.CreateScope())
         {
             var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
@@ -184,7 +186,7 @@ public class TopicUpdateTests : IClassFixture<CustomWebApplicationFactory<Progra
 
         var response = await _client.PutAsync($"/topics/{newTopic.Id}", content);
 
-        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var topicRecord = from t in dbContext.Topics
                         where t.Title == $"{newTopic.Title}_edit" &&
                                 t.Content == $"{newTopic.Content}_edit"
@@ -211,7 +213,7 @@ public class TopicUpdateTests : IClassFixture<CustomWebApplicationFactory<Progra
 
         var response = await _client.PutAsync($"/topics/{newTopic.Id}", content);
 
-        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var topicRecord = from t in dbContext.Topics
                         where t.Title == $"{newTopic.Title}_edit" &&
                                 t.Content == $"{newTopic.Content}_edit"
@@ -265,7 +267,8 @@ public class TopicUpdateTests : IClassFixture<CustomWebApplicationFactory<Progra
 
         var response = await _client.PutAsync($"/topics/{newTopic.Id}/status", content);
 
-        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+        Assert.Equal($"/sections/{newTopic.Section.Id}", response.Headers.Location.OriginalString);
         using (var scope = _factory.Services.CreateScope())
         {
             var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
@@ -296,7 +299,8 @@ public class TopicUpdateTests : IClassFixture<CustomWebApplicationFactory<Progra
 
         var response = await _client.PutAsync($"/topics/{newTopic.Id}/status", content);
 
-        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+        Assert.Equal($"/sections/{newTopic.Section.Id}", response.Headers.Location.OriginalString);
         using (var scope = _factory.Services.CreateScope())
         {
             var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
@@ -433,7 +437,8 @@ public class TopicUpdateTests : IClassFixture<CustomWebApplicationFactory<Progra
         var response = await _client.PostAsync($"/topics/{newTopic.Id}", content);
         DateTime timeAfterResponse = DateTime.Now;
 
-        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+        Assert.Equal($"/topics/{newTopic.Id}", response.Headers.Location.OriginalString);
         using (var scope = _factory.Services.CreateScope())
         {
             var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();

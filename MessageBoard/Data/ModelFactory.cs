@@ -64,4 +64,46 @@ public class ModelFactory
 
         return section;
     }
+
+    public static Topic CreateTopic(MessageBoardDbContext dbContext,
+        bool isPinned = false, bool isOpen = true, Section section = null,
+        User author = null)
+    {
+        var now = DateTime.Now;
+        var topic = new Topic
+        {
+            Title = _faker.Lorem.Sentence(),
+            Content = _faker.Lorem.Sentence(),
+            IsPinned = isPinned,
+            IsOpen = isOpen,
+            CreatedAt = now,
+            UpdatedAt = now,
+            Section = section ?? CreateSection(dbContext),
+            Author = author ?? CreateUser(dbContext),
+        };
+
+        dbContext.Topics.Add(topic);
+        dbContext.SaveChanges();
+
+        return topic;
+    }
+
+    public static Post CreatePost(MessageBoardDbContext dbContext,
+        Discussion discussion = null, User author = null)
+    {
+        var now = DateTime.Now;
+        var post = new Post
+        {
+            Content = _faker.Lorem.Sentence(),
+            CreatedAt = now,
+            UpdatedAt = now,
+            Discussion = discussion ?? CreateTopic(dbContext),
+            Author = author ?? CreateUser(dbContext),
+        };
+
+        dbContext.Posts.Add(post);
+        dbContext.SaveChanges();
+
+        return post;
+    }
 }

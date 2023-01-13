@@ -32,3 +32,23 @@ main > * {
   margin-top: 1rem;
   min-width: 25rem;
 }
+
+.p-topic-box {
+  align-items: center;
+  background: #111;
+  display: flex;
+}
+
+.p-topic-box:not(:last-child) {
+  border-bottom: 1px solid #777;
+}
+
+.p-post-box {
+  background: #111;
+  display: flex;
+  margin-top: 1rem;
+}
+
+.p-post-box .p-user-info {
+  background: #333;
+}

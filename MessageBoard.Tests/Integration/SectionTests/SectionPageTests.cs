@@ -91,4 +91,19 @@ public class SectionPageTests : IClassFixture<CustomWebApplicationFactory<Progra
 
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }
+
+    [Fact]
+    public async Task SectionPageCanBeAccessed()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
+        dbContext.Database.EnsureDeleted();
+        dbContext.Database.Migrate();
+        var section = await DataFactory.CreateSection(dbContext);
+
+        _client.DefaultRequestHeaders.Add("UserId", "1");
+        var response = await _client.GetAsync($"/sections/{section.Id}");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
 }

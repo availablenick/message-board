@@ -1,0 +1,93 @@
+@model Section
+
+@section Title { @Model.Name }
+
+<div class="p-5">
+  <h1>@Model.Name</h1>
+
+  <p>@Model.Description</p>
+
+  <div>
+    @foreach (var topic in Model.Topics)
+    {
+      <div class="p-topic-box">
+        <div class="d-flex" style="flex: 11">
+          <div class="p-3">
+              <img class="img-fluid" style="width: 50px"
+                src='@($"/{topic.Author.GetAvatarPath()}")'
+              />
+          </div>
+          <div class="d-flex flex-column justify-content-center">
+            <a asp-route="TopicShow" asp-route-id="@topic.Id">@topic.Title</a>
+            <div style="font-size: 0.8rem">By: @topic.Author.Username</div>
+          </div>
+        </div>
+
+        @if (topic.IsPinned)
+        {
+          <div class="p-1">
+            <i class="fa-solid fa-thumbtack"></i>
+          </div>
+        }
+
+        @if (User.IsInRole("Moderator"))
+        {
+          <form class="p-1" asp-route="TopicStatus" asp-route-id="@topic.Id">
+            <input type="hidden" name="_method" value="PUT">
+
+            @if (topic.IsPinned)
+            {
+              <input type="hidden" name="isPinned" value="false">
+              <button class="btn btn-secondary">Unpin</button>
+            }
+            else
+            {
+              <input type="hidden" name="isPinned" value="true">
+              <button class="btn btn-secondary">Pin</button>
+            }
+          </form>
+        }
+
+        @if (!topic.IsOpen)
+        {
+          <div class="p-1 me-1">
+            <i class="fa-solid fa-lock"></i>
+          </div>
+        }
+
+        @if (User.IsInRole("Moderator"))
+        {
+          <form class="p-1 me-1" asp-route="TopicStatus" asp-route-id="@topic.Id">
+            <input type="hidden" name="_method" value="PUT">
+
+            @if (topic.IsOpen)
+            {
+              <input type="hidden" name="isOpen" value="false">
+              <button class="btn btn-secondary">Close</button>
+            }
+            else
+            {
+              <input type="hidden" name="isOpen" value="true">
+              <button class="btn btn-secondary">Open</button>
+            }
+          </form>
+        }
+
+        <div class="p-3 d-flex align-items-center justify-content-center"
+          style="border-left: 1px solid #777; flex: 1"
+        >
+          @(topic.Posts.Count) Posts
+        </div>
+      </div>
+    }
+
+    @if (User.Identity.IsAuthenticated)
+    {
+      <div class="text-center mt-5">
+        <a asp-route="TopicNew" asp-route-sectionId="@Model.Id">
+          Create topic
+        </a>
+      </div>
+    }
+  </div>
+</div>
