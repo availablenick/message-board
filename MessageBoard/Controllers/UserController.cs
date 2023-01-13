@@ -59,7 +59,7 @@ public class UserController : Controller
         var user = await _context.Users.FindAsync(id);
         _context.Entry(user).Collection(u => u.Topics).Load();
         _context.Entry(user).Collection(u => u.Posts).Load();
-        return View("Details", user);
+        return View("Show", user);
     }
 
     [HttpGet]
