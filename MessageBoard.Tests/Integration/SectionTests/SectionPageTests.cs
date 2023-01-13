@@ -78,6 +78,22 @@ public class SectionPageTests : IClassFixture<CustomWebApplicationFactory<Progra
     }
 
     [Fact]
+    
+    public async Task UserCannotAccessEditPageOfNonExistentSection()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
+        dbContext.Database.EnsureDeleted();
+        dbContext.Database.Migrate();
+
+        _client.DefaultRequestHeaders.Add("UserId", "1");
+        _client.DefaultRequestHeaders.Add("Role", "Moderator");
+        var response = await _client.GetAsync("/sections/1/edit");
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Fact]
     public async Task SectionEditPageCannotBeAccessedByRegularUser()
     {
         using var scope = _factory.Services.CreateScope();

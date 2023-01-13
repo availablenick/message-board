@@ -66,7 +66,7 @@ public class SectionController : Controller
         var section = await _context.Sections.FindAsync(id);
         if (section == null)
         {
-            return View("Views/Error/404.cshtml");
+            return NotFound();
         }
 
         return View("Edit", section);

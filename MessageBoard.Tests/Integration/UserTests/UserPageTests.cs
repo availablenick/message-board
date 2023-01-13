@@ -99,12 +99,11 @@ public class UserPageTests : IClassFixture<CustomWebApplicationFactory<Program>>
         var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
         dbContext.Database.EnsureDeleted();
         dbContext.Database.Migrate();
-        var user = await DataFactory.CreateUser(dbContext);
 
-        _client.DefaultRequestHeaders.Add("UserId", user.Id.ToString());
-        var response = await _client.GetAsync("/users/2/edit");
+        _client.DefaultRequestHeaders.Add("UserId", "1");
+        var response = await _client.GetAsync("/users/1/edit");
 
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
     [Fact]

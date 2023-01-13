@@ -109,7 +109,7 @@ public class UserController : Controller
         var user = await _context.Users.FindAsync(id);
         if (user == null)
         {
-            return View("Views/Error/404.cshtml");
+            return NotFound();
         }
 
         if (!ResourceHandler.IsAuthorized(User, id))
