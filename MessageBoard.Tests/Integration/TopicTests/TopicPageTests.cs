@@ -132,7 +132,7 @@ public class TopicPageTests : IClassFixture<CustomWebApplicationFactory<Program>
     }
 
     [Fact]
-    public async Task TopicEditPageCannotBeAccessedByModerator()
+    public async Task TopicEditPageCanBeAccessedByModerator()
     {
         using var scope = _factory.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();

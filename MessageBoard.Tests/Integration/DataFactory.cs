@@ -95,17 +95,27 @@ public class DataFactory
         return message;
     }
 
-    public static async Task<Post> CreatePost(MessageBoardDbContext dbContext)
+    public static async Task<Post> CreatePost(MessageBoardDbContext dbContext,
+        bool inPrivateMessage = false)
     {
+        Discussion discussion;
+        if (inPrivateMessage)
+        {
+            discussion = await CreatePrivateMessage(dbContext);
+        }
+        else
+        {
+            discussion = await CreateTopic(dbContext);
+        }
+
         var now = DateTime.Now;
-        var topic = await CreateTopic(dbContext);
         var post = new Post
         {
             Content = _faker.Lorem.Paragraph(),
             CreatedAt = now,
             UpdatedAt = now,
-            Author = topic.Author,
-            Discussion = topic,
+            Author = discussion.Author,
+            Discussion = discussion,
         };
 
         await dbContext.Posts.AddAsync(post);

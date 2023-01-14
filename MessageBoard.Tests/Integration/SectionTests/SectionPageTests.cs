@@ -78,7 +78,6 @@ public class SectionPageTests : IClassFixture<CustomWebApplicationFactory<Progra
     }
 
     [Fact]
-    
     public async Task UserCannotAccessEditPageOfNonExistentSection()
     {
         using var scope = _factory.Services.CreateScope();

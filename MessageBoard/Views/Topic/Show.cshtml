@@ -120,12 +120,29 @@
     </div>
   }
 
-  <form class="d-flex flex-column align-items-center justify-content mt-5">
-    <div>
-      <textarea class="bg-dark text-light" rows="7" cols="50" style="resize: none"></textarea>
+  @if (User.Identity.IsAuthenticated)
+  {
+    <form class="d-flex flex-column align-items-center justify-content mt-5"
+      asp-route="PostCreate" asp-route-discussionId="@Model.Id"
+    >
       <div>
-        <button class="btn btn-secondary w-100">Post</button>
+        <textarea class="bg-dark text-light" rows="7" cols="50" style="resize: none"
+          name="content"></textarea>
+        <div>
+          <button class="btn btn-secondary w-100">Post</button>
+        </div>
+
+        @if (ViewData.ModelState["Content"] != null &&
+        ViewData.ModelState["Content"].Errors.Any())
+        {
+          @foreach (var error in ViewData.ModelState["Content"].Errors)
+          {
+            <div class="bg-danger mt-2 p-1">
+              @error.ErrorMessage
+            </div>
+          }
+        }
       </div>
-    </div>
-  </form>
+    </form>
+  }
 </div>

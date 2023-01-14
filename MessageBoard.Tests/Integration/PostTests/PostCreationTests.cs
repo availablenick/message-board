@@ -47,7 +47,8 @@ public class PostCreationTests : IClassFixture<CustomWebApplicationFactory<Progr
         var response = await _client.PostAsync($"/discussions/{topic.Id}/posts", content);
         DateTime timeAfterResponse = DateTime.Now;
 
-        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+        Assert.Equal($"/topics/{topic.Id}", response.Headers.Location.OriginalString);
         var postRecord = from p in dbContext.Posts
                         where p.Content == "test_content"
                         select p;
@@ -116,7 +117,7 @@ public class PostCreationTests : IClassFixture<CustomWebApplicationFactory<Progr
 
         var response = await _client.PostAsync($"/discussions/{topic.Id}/posts", content);
 
-        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Equal(0, await dbContext.Posts.CountAsync());
     }
 
