@@ -7,10 +7,13 @@ using MessageBoard.Models;
 
 namespace MessageBoard.Controllers;
 
-[Route("complaints")]
-[ValidateAntiForgeryToken]
 public class ComplaintController : Controller
 {
+    public class ComplaintDTO
+    {
+        public string Reason { get; set; }
+    }
+
     private readonly MessageBoardDbContext _context;
 
     public ComplaintController(MessageBoardDbContext context)
@@ -18,9 +21,20 @@ public class ComplaintController : Controller
         _context = context;
     }
 
+    [HttpGet]
+    [Authorize]
+    [Route("rateables/{targetId}/complaints/new", Name = "ComplaintNew")]
+    public async Task<IActionResult> Create(int targetId)
+    {
+        var target = await _context.Rateables.FindAsync(targetId);
+        return View("Create", target);
+    }
+
     [HttpPost]
     [Authorize]
-    public async Task<IActionResult> Create(int targetId, string reason)
+    [Route("rateables/{targetId}/complaints", Name = "ComplaintCreate")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Create(int targetId, ComplaintDTO complaintDTO)
     {
         var target = await _context.Rateables.FindAsync(targetId);
         if (target == null)
@@ -28,20 +42,21 @@ public class ComplaintController : Controller
             return NotFound();
         }
 
-        var complaint = await MakeComplaint(target, reason);
-        if (!complaint.IsValid())
+        if (!ModelState.IsValid)
         {
-            return UnprocessableEntity();
+            return View("Create", target);
         }
 
+        var complaint = await MakeComplaint(target, complaintDTO);
         await _context.Complaints.AddAsync(complaint);
         await _context.SaveChangesAsync();
-        return NoContent();
+        return RedirectToRoute("RateableShow", new { id = target.Id });
     }
 
     [HttpDelete]
-    [Route("{id}")]
+    [Route("complaints/{id}")]
     [Authorize(Roles = "Moderator")]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Delete(int id)
     {
         var complaint = await _context.Complaints.FindAsync(id);
@@ -55,12 +70,13 @@ public class ComplaintController : Controller
         return NoContent();
     }
 
-    private async Task<Complaint> MakeComplaint(Rateable target, string reason)
+    private async Task<Complaint> MakeComplaint(Rateable target,
+        ComplaintDTO complaintDTO)
     {
         var now = DateTime.Now;
         var complaint = new Complaint
         {
-            Reason = reason,
+            Reason = complaintDTO.Reason,
             CreatedAt = now,
             UpdatedAt = now,
             Author = await UserHandler.GetAuthenticatedUser(User, _context),

@@ -2,7 +2,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
-using MessageBoard.Auth;
 using MessageBoard.Data;
 using MessageBoard.Models;
 

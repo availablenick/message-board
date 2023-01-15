@@ -40,24 +40,29 @@
         @Model.Content
       </div>
 
-      @if (ResourceHandler.IsAuthorized(User, Model.Author.Id) ||
-        User.IsInRole("Moderator"))
+      @if (User.Identity.IsAuthenticated)
       {
         <div class="p-2 text-end">
-          <a class="text-decoration-none" asp-route="TopicEdit"
-            asp-route-id="@Model.Id"
-          >
-            <i class="fa-solid fa-pen-to-square"></i>
-          </a>
+          <a class="me-2" asp-route="ComplaintNew" asp-route-targetId="@Model.Id">
+            Report</a>
+          @if (ResourceHandler.IsAuthorized(User, Model.Author.Id) ||
+            User.IsInRole("Moderator"))
+          {
+              <a class="text-decoration-none" asp-route="TopicEdit"
+                asp-route-id="@Model.Id"
+              >
+                <i class="fa-solid fa-pen-to-square"></i>
+              </a>
 
-          <form class="d-inline-block" asp-route="TopicDelete"
-            asp-route-id="@Model.Id"
-          >
-            <input type="hidden" name="_method" value="DELETE" />
-            <button class="btn btn-secondary px-1 py-0">
-              <i class="fa-solid fa-trash"></i>
-            </button>
-          </form>
+              <form class="d-inline-block" asp-route="TopicDelete"
+                asp-route-id="@Model.Id"
+              >
+                <input type="hidden" name="_method" value="DELETE" />
+                <button class="btn btn-secondary px-1 py-0">
+                  <i class="fa-solid fa-trash"></i>
+                </button>
+              </form>
+          }
         </div>
       }
     </div>
@@ -102,24 +107,29 @@
         @post.Content
       </div>
 
-      @if (ResourceHandler.IsAuthorized(User, post.Author.Id) ||
-        User.IsInRole("Moderator"))
+      @if (User.Identity.IsAuthenticated)
       {
         <div class="p-2 text-end">
-          <a class="text-decoration-none" asp-route="PostEdit"
-            asp-route-id="@post.Id"
-          >
-            <i class="fa-solid fa-pen-to-square"></i>
-          </a>
+          <a class="me-2" asp-route="ComplaintNew" asp-route-targetId="@post.Id">
+            Report</a>
+          @if (ResourceHandler.IsAuthorized(User, post.Author.Id) ||
+            User.IsInRole("Moderator"))
+          {
+              <a class="text-decoration-none" asp-route="PostEdit"
+                asp-route-id="@post.Id"
+              >
+                <i class="fa-solid fa-pen-to-square"></i>
+              </a>
 
-          <form class="d-inline-block" asp-route="PostDelete"
-            asp-route-id="@post.Id"
-          >
-            <input type="hidden" name="_method" value="DELETE" />
-            <button class="btn btn-secondary px-1 py-0">
-              <i class="fa-solid fa-trash"></i>
-            </button>
-          </form>
+              <form class="d-inline-block" asp-route="PostDelete"
+                asp-route-id="@post.Id"
+              >
+                <input type="hidden" name="_method" value="DELETE" />
+                <button class="btn btn-secondary px-1 py-0">
+                  <i class="fa-solid fa-trash"></i>
+                </button>
+              </form>
+          }
         </div>
       }
     </div>

@@ -7,15 +7,15 @@ using System.Net.Http.Headers;
 using MessageBoard.Data;
 using MessageBoard.Models;
 
-namespace MessageBoard.Tests.Integration.DiscussionTests;
+namespace MessageBoard.Tests.Integration.ComplaintTests;
 
 [Collection("Sync")]
-public class DiscussionPageTests : IClassFixture<CustomWebApplicationFactory<Program>>
+public class ComplaintPageTests : IClassFixture<CustomWebApplicationFactory<Program>>
 {
     private readonly CustomWebApplicationFactory<Program> _factory;
     private readonly HttpClient _client;
 
-    public DiscussionPageTests(CustomWebApplicationFactory<Program> factory)
+    public ComplaintPageTests(CustomWebApplicationFactory<Program> factory)
     {
         _factory = factory;
         _client = factory.CreateClient(new WebApplicationFactoryClientOptions
@@ -28,7 +28,22 @@ public class DiscussionPageTests : IClassFixture<CustomWebApplicationFactory<Pro
     }
 
     [Fact]
-    public async Task DiscussionPageCanRedirectToTopic()
+    public async Task ComplaintCreationPageCanBeAccessed()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
+        dbContext.Database.EnsureDeleted();
+        dbContext.Database.Migrate();
+        var topic = await DataFactory.CreateTopic(dbContext);
+
+        _client.DefaultRequestHeaders.Add("UserId", "1");
+        var response = await _client.GetAsync($"/rateables/{topic.Id}/complaints/new");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task ComplaintCreationPageCannotBeAccessedByUnauthenticatedUser()
     {
         using var scope = _factory.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
@@ -37,25 +52,8 @@ public class DiscussionPageTests : IClassFixture<CustomWebApplicationFactory<Pro
         var topic = await DataFactory.CreateTopic(dbContext);
 
         _client.DefaultRequestHeaders.Remove("Authorization");
-        var response = await _client.GetAsync($"/discussions/{topic.Id}");
+        var response = await _client.GetAsync($"/rateables/{topic.Id}/complaints/new");
 
-        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
-        Assert.Equal($"/topics/{topic.Id}", response.Headers.Location.OriginalString);
-    }
-
-    [Fact]
-    public async Task DiscussionPageCanRedirectToPrivateMessage()
-    {
-        using var scope = _factory.Services.CreateScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
-        dbContext.Database.EnsureDeleted();
-        dbContext.Database.Migrate();
-        var message = await DataFactory.CreatePrivateMessage(dbContext);
-
-        _client.DefaultRequestHeaders.Remove("Authorization");
-        var response = await _client.GetAsync($"/discussions/{message.Id}");
-
-        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
-        Assert.Equal($"/messages/{message.Id}", response.Headers.Location.OriginalString);
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
 }

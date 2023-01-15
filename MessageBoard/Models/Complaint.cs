@@ -8,19 +8,4 @@ public class Complaint
     public DateTime UpdatedAt { get; set; }
     public User Author { get; set; }
     public Rateable Target { get; set; }
-
-    public bool IsValid()
-    {
-        if (String.IsNullOrEmpty(Reason))
-        {
-            return false;
-        }
-
-        if (Target == null)
-        {
-            return false;
-        }
-
-        return true;
-    }
 }
