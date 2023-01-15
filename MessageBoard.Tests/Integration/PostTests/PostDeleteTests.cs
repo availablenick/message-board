@@ -43,6 +43,8 @@ public class PostDeleteTests : IClassFixture<CustomWebApplicationFactory<Program
         _client.DefaultRequestHeaders.Add("X-XSRF-TOKEN", await Utilities.GetCSRFToken(_client));
         var response = await _client.DeleteAsync($"/posts/{post.Id}");
 
+        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+        Assert.Equal($"/discussions/{post.Discussion.Id}", response.Headers.Location.OriginalString);
         using (var scope = _factory.Services.CreateScope())
         {
             var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
@@ -81,6 +83,8 @@ public class PostDeleteTests : IClassFixture<CustomWebApplicationFactory<Program
         _client.DefaultRequestHeaders.Add("X-XSRF-TOKEN", await Utilities.GetCSRFToken(_client));
         var response = await _client.DeleteAsync($"/posts/{post.Id}");
 
+        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+        Assert.Equal($"/discussions/{post.Discussion.Id}", response.Headers.Location.OriginalString);
         using (var scope = _factory.Services.CreateScope())
         {
             var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
@@ -159,39 +163,6 @@ public class PostDeleteTests : IClassFixture<CustomWebApplicationFactory<Program
     }
 
     [Fact]
-    public async Task UserIsRedirectedToTopicPageAfterDeletingTopicPost()
-    {
-        using var scope = _factory.Services.CreateScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
-        dbContext.Database.EnsureDeleted();
-        dbContext.Database.Migrate();
-        var post = await DataFactory.CreatePost(dbContext);
-
-        _client.DefaultRequestHeaders.Add("UserId", post.Author.Id.ToString());
-        _client.DefaultRequestHeaders.Add("X-XSRF-TOKEN", await Utilities.GetCSRFToken(_client));
-        var response = await _client.DeleteAsync($"/posts/{post.Id}");
-
-        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
-        Assert.Equal($"/topics/{post.Discussion.Id}", response.Headers.Location.OriginalString);
-    }
-
-    [Fact]
-    public async Task NoContentIsReturnedAfterDeletingPrivateMessagePost()
-    {
-        using var scope = _factory.Services.CreateScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
-        dbContext.Database.EnsureDeleted();
-        dbContext.Database.Migrate();
-        var post = await DataFactory.CreatePost(dbContext, true);
-
-        _client.DefaultRequestHeaders.Add("UserId", post.Author.Id.ToString());
-        _client.DefaultRequestHeaders.Add("X-XSRF-TOKEN", await Utilities.GetCSRFToken(_client));
-        var response = await _client.DeleteAsync($"/posts/{post.Id}");
-
-        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
-    }
-
-    [Fact]
     public async Task CSRFProtectionIsActive()
     {
         using var scope = _factory.Services.CreateScope();
@@ -232,6 +203,8 @@ public class PostDeleteTests : IClassFixture<CustomWebApplicationFactory<Program
 
         var response = await _client.PostAsync($"/posts/{post.Id}", content);
 
+        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+        Assert.Equal($"/discussions/{post.Discussion.Id}", response.Headers.Location.OriginalString);
         using (var scope = _factory.Services.CreateScope())
         {
             var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();

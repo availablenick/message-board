@@ -48,7 +48,7 @@ public class PostCreationTests : IClassFixture<CustomWebApplicationFactory<Progr
         DateTime timeAfterResponse = DateTime.Now;
 
         Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
-        Assert.Equal($"/topics/{topic.Id}", response.Headers.Location.OriginalString);
+        Assert.Equal($"/discussions/{topic.Id}", response.Headers.Location.OriginalString);
         var postRecord = from p in dbContext.Posts
                         where p.Content == "test_content"
                         select p;
@@ -84,7 +84,8 @@ public class PostCreationTests : IClassFixture<CustomWebApplicationFactory<Progr
         var response = await _client.PostAsync($"/discussions/{message.Id}/posts", content);
         DateTime timeAfterResponse = DateTime.Now;
 
-        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+        Assert.Equal($"/discussions/{message.Id}", response.Headers.Location.OriginalString);
         var postRecord = from p in dbContext.Posts
                         where p.Content == "test_content"
                         select p;

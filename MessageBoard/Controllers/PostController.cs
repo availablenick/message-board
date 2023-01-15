@@ -60,12 +60,7 @@ public class PostController : Controller
         var post = await MakePost(discussion, postDTO);
         await _context.Posts.AddAsync(post);
         await _context.SaveChangesAsync();
-        if (discussion is Topic)
-        {
-            return RedirectToRoute("TopicShow", new { id = discussion.Id });
-        }
-
-        return NoContent();
+        return RedirectToRoute("DiscussionShow", new { id = discussion.Id });
     }
 
     [HttpGet]
@@ -117,12 +112,7 @@ public class PostController : Controller
 
         _context.Posts.Update(post);
         await _context.SaveChangesAsync();
-        if (post.Discussion is Topic)
-        {
-            return RedirectToRoute("TopicShow", new { id = post.Discussion.Id });
-        }
-
-        return NoContent();
+        return RedirectToRoute("DiscussionShow", new { id = post.Discussion.Id });
     }
 
     [HttpDelete]
@@ -146,12 +136,7 @@ public class PostController : Controller
         _context.Entry(post).Reference(p => p.Discussion).Load();
         _context.Posts.Remove(post);
         await _context.SaveChangesAsync();
-        if (post.Discussion is Topic)
-        {
-            return RedirectToRoute("TopicShow", new { id = post.Discussion.Id });
-        }
-
-        return NoContent();
+        return RedirectToRoute("DiscussionShow", new { id = post.Discussion.Id });
     }
 
     private async Task<Post> MakePost(Discussion discussion, PostDTO postDTO)

@@ -50,6 +50,8 @@ public class PostUpdateTests : IClassFixture<CustomWebApplicationFactory<Program
         var response = await _client.PutAsync($"/posts/{newPost.Id}", content);
         DateTime timeAfterResponse = DateTime.Now;
 
+        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+        Assert.Equal($"/discussions/{newPost.Discussion.Id}", response.Headers.Location.OriginalString);
         using (var scope = _factory.Services.CreateScope())
         {
             var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
@@ -90,6 +92,8 @@ public class PostUpdateTests : IClassFixture<CustomWebApplicationFactory<Program
         var response = await _client.PutAsync($"/posts/{newPost.Id}", content);
         DateTime timeAfterResponse = DateTime.Now;
 
+        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+        Assert.Equal($"/discussions/{newPost.Discussion.Id}", response.Headers.Location.OriginalString);
         using (var scope = _factory.Services.CreateScope())
         {
             var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
@@ -203,49 +207,6 @@ public class PostUpdateTests : IClassFixture<CustomWebApplicationFactory<Program
     }
 
     [Fact]
-    public async Task UserIsRedirectedToTopicPageAfterUpdatingTopicPost()
-    {
-        using var scope = _factory.Services.CreateScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
-        dbContext.Database.EnsureDeleted();
-        dbContext.Database.Migrate();
-        var post = await DataFactory.CreatePost(dbContext);
-
-        _client.DefaultRequestHeaders.Add("UserId", post.Author.Id.ToString());
-        var content = new FormUrlEncodedContent(new Dictionary<string, string>
-        {
-            { "_token", await Utilities.GetCSRFToken(_client) },
-            { "content", $"{post.Content}_edit" },
-        });
-
-        var response = await _client.PutAsync($"/posts/{post.Id}", content);
-
-        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
-        Assert.Equal($"/topics/{post.Discussion.Id}", response.Headers.Location.OriginalString);
-    }
-
-    [Fact]
-    public async Task NoContentIsReturnedAfterUpdatingPrivateMessagePost()
-    {
-        using var scope = _factory.Services.CreateScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
-        dbContext.Database.EnsureDeleted();
-        dbContext.Database.Migrate();
-        var post = await DataFactory.CreatePost(dbContext, true);
-
-        _client.DefaultRequestHeaders.Add("UserId", post.Author.Id.ToString());
-        var content = new FormUrlEncodedContent(new Dictionary<string, string>
-        {
-            { "_token", await Utilities.GetCSRFToken(_client) },
-            { "content", $"{post.Content}_edit" },
-        });
-
-        var response = await _client.PutAsync($"/posts/{post.Id}", content);
-
-        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
-    }
-
-    [Fact]
     public async Task CSRFProtectionIsActive()
     {
         using var scope = _factory.Services.CreateScope();
@@ -294,6 +255,8 @@ public class PostUpdateTests : IClassFixture<CustomWebApplicationFactory<Program
         var response = await _client.PostAsync($"/posts/{newPost.Id}", content);
         DateTime timeAfterResponse = DateTime.Now;
 
+        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+        Assert.Equal($"/discussions/{newPost.Discussion.Id}", response.Headers.Location.OriginalString);
         using (var scope = _factory.Services.CreateScope())
         {
             var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
