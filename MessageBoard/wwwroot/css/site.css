@@ -52,3 +52,23 @@ main > * {
 .p-post-box .p-user-info {
   background: #333;
 }
+
+.p-positive-rating, .p-negative-rating {
+  color: white;
+}
+
+.p-positive-rating-active {
+  color: lime;
+}
+
+.p-positive-rating:hover {
+  color: lime;
+}
+
+.p-negative-rating-active {
+  color: red;
+}
+
+.p-negative-rating:hover {
+  color: red;
+}

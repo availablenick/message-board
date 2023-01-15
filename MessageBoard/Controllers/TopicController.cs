@@ -45,7 +45,11 @@ public class TopicController : Controller
             .Include(u => u.Posts).Load();
 
         _context.Entry(topic).Collection(t => t.Posts).Query()
-            .Include(p => p.Author).ThenInclude(u => u.Posts).Load();
+            .Include(p => p.Ratings).Include(p => p.Author).ThenInclude(u => u.Posts)
+            .Load();
+
+        _context.Entry(topic).Collection(t => t.Ratings).Query()
+            .Include(r => r.Owner).Load();
 
         return View("Show", topic);
     }

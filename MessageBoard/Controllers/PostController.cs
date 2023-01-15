@@ -47,7 +47,11 @@ public class PostController : Controller
                     .Include(u => u.Posts).Load();
 
                 _context.Entry(discussion).Collection(d => d.Posts).Query()
-                    .Include(p => p.Author).ThenInclude(u => u.Posts).Load();
+                    .Include(p => p.Ratings).Include(p => p.Author)
+                    .ThenInclude(u => u.Posts).Load();
+
+                _context.Entry(discussion).Collection(d => d.Ratings).Query()
+                    .Include(r => r.Owner).Load();
 
                 return View("/Views/Topic/Show.cshtml", discussion);
             }

@@ -50,7 +50,8 @@ public class RatingCreationTests : IClassFixture<CustomWebApplicationFactory<Pro
         var response = await _client.PostAsync("/ratings", content);
         DateTime timeAfterResponse = DateTime.Now;
 
-        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+        Assert.Equal($"/topics/{topic.Id}", response.Headers.Location.OriginalString);
         var ratingRecord = from r in dbContext.Ratings
                         where r.Value == ratingValue
                         select r;
@@ -61,6 +62,46 @@ public class RatingCreationTests : IClassFixture<CustomWebApplicationFactory<Pro
         Assert.Equal(topic.Id, rating.Target.Id);
         Assert.True(topic.Author.Ratings.Exists(r => r.Id == rating.Id));
         Assert.True(topic.Ratings.Exists(r => r.Id == rating.Id));
+        Assert.True(rating.CreatedAt.CompareTo(timeBeforeResponse) >= 0);
+        Assert.True(rating.CreatedAt.CompareTo(timeAfterResponse) <= 0);
+        Assert.True(rating.CreatedAt.CompareTo(rating.UpdatedAt) == 0);
+    }
+
+    [Theory]
+    [InlineData(1)]
+    [InlineData(-1)]
+    public async Task PrivateMessageRatingCanBeCreated(int ratingValue)
+    {
+        using var scope = _factory.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
+        dbContext.Database.EnsureDeleted();
+        dbContext.Database.Migrate();
+        var message = await DataFactory.CreatePrivateMessage(dbContext);
+
+        _client.DefaultRequestHeaders.Add("UserId", message.Author.Id.ToString());
+        var content = new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            { "_token", await Utilities.GetCSRFToken(_client) },
+            { "value", ratingValue.ToString() },
+            { "targetId", message.Id.ToString() },
+        });
+
+        DateTime timeBeforeResponse = DateTime.Now;
+        var response = await _client.PostAsync("/ratings", content);
+        DateTime timeAfterResponse = DateTime.Now;
+
+        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+        Assert.Equal($"/messages/{message.Id}", response.Headers.Location.OriginalString);
+        var ratingRecord = from r in dbContext.Ratings
+                        where r.Value == ratingValue
+                        select r;
+
+        var rating = ratingRecord.FirstOrDefault();
+        Assert.NotNull(rating);
+        Assert.Equal(message.Author.Id, rating.Owner.Id);
+        Assert.Equal(message.Id, rating.Target.Id);
+        Assert.True(message.Author.Ratings.Exists(r => r.Id == rating.Id));
+        Assert.True(message.Ratings.Exists(r => r.Id == rating.Id));
         Assert.True(rating.CreatedAt.CompareTo(timeBeforeResponse) >= 0);
         Assert.True(rating.CreatedAt.CompareTo(timeAfterResponse) <= 0);
         Assert.True(rating.CreatedAt.CompareTo(rating.UpdatedAt) == 0);
@@ -89,7 +130,6 @@ public class RatingCreationTests : IClassFixture<CustomWebApplicationFactory<Pro
         var response = await _client.PostAsync("/ratings", content);
         DateTime timeAfterResponse = DateTime.Now;
 
-        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
         var ratingRecord = from r in dbContext.Ratings
                         where r.Value == ratingValue
                         select r;
@@ -175,6 +215,54 @@ public class RatingCreationTests : IClassFixture<CustomWebApplicationFactory<Pro
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
         Assert.Equal(0, await dbContext.Ratings.CountAsync());
+    }
+
+    [Fact]
+    public async Task UserCannotHaveMoreThanOneRatingPerRateable()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
+        dbContext.Database.EnsureDeleted();
+        dbContext.Database.Migrate();
+        var rating = await DataFactory.CreateRating(1, dbContext);
+
+        _client.DefaultRequestHeaders.Add("UserId", rating.Owner.Id.ToString());
+        var content = new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            { "_token", await Utilities.GetCSRFToken(_client) },
+            { "value", "1" },
+            { "targetId", rating.Target.Id.ToString() },
+        });
+
+        var response = await _client.PostAsync("/ratings", content);
+
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+        Assert.Equal(1, await dbContext.Ratings.CountAsync());
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task PostRatingCreationRedirectsToDiscussionPage(bool usePrivateMessage)
+    {
+        using var scope = _factory.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
+        dbContext.Database.EnsureDeleted();
+        dbContext.Database.Migrate();
+        var post = await DataFactory.CreatePost(dbContext, usePrivateMessage);
+
+        _client.DefaultRequestHeaders.Add("UserId", post.Author.Id.ToString());
+        var content = new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            { "_token", await Utilities.GetCSRFToken(_client) },
+            { "value", "1" },
+            { "targetId", post.Id.ToString() },
+        });
+
+        var response = await _client.PostAsync("/ratings", content);
+
+        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+        Assert.Equal($"/discussions/{post.Discussion.Id}", response.Headers.Location.OriginalString);
     }
 
     [Fact]

@@ -21,12 +21,22 @@ public class RatingController : Controller
     }
 
     [HttpPost]
+    [Route("", Name = "RatingCreate")]
     public async Task<IActionResult> Create(int targetId, int value)
     {
         var target = await _context.Rateables.FindAsync(targetId);
         if (target == null)
         {
             return NotFound();
+        }
+
+        var user = await UserHandler.GetAuthenticatedUser(User, _context);
+        _context.Entry(target).Collection(t => t.Ratings).Query()
+            .Include(r => r.Owner).Load();
+
+        if (target.Ratings.Exists(r => r.Owner.Id == user.Id))
+        {
+            return UnprocessableEntity();
         }
 
         var rating = await MakeRating(target, value);
@@ -37,11 +47,22 @@ public class RatingController : Controller
 
         await _context.Ratings.AddAsync(rating);
         await _context.SaveChangesAsync();
-        return NoContent();
+
+        if (target is Topic)
+        {
+            return RedirectToRoute("TopicShow", new { id = targetId });
+        }
+        else if (target is PrivateMessage)
+        {
+            return Redirect($"/messages/{targetId}");
+        }
+
+        _context.Entry(target).Reference(p => ((Post) p).Discussion).Load();
+        return RedirectToRoute("DiscussionShow", new { id = ((Post) target).Discussion.Id });
     }
 
     [HttpPut]
-    [Route("{id}")]
+    [Route("{id}", Name = "RatingUpdate")]
     public async Task<IActionResult> Update(int id, int value)
     {
         var rating = await _context.Ratings.FindAsync(id);
@@ -69,11 +90,23 @@ public class RatingController : Controller
 
         _context.Ratings.Update(rating);
         await _context.SaveChangesAsync();
-        return NoContent();
+
+        _context.Entry(rating).Reference(r => r.Target).Load();
+        if (rating.Target is Topic)
+        {
+            return RedirectToRoute("TopicShow", new { id = rating.Target.Id });
+        }
+        else if (rating.Target is PrivateMessage)
+        {
+            return Redirect($"/messages/{rating.Target.Id}");
+        }
+
+        _context.Entry(rating.Target).Reference(p => ((Post) p).Discussion).Load();
+        return RedirectToRoute("DiscussionShow", new { id = ((Post) rating.Target).Discussion.Id });
     }
 
     [HttpDelete]
-    [Route("{id}")]
+    [Route("{id}", Name = "RatingDelete")]
     public async Task<IActionResult> Delete(int id)
     {
         var rating = await _context.Ratings.FindAsync(id);
@@ -88,9 +121,21 @@ public class RatingController : Controller
             return Forbid();
         }
 
+        _context.Entry(rating).Reference(r => r.Target).Load();
         _context.Ratings.Remove(rating);
         await _context.SaveChangesAsync();
-        return NoContent();
+
+        if (rating.Target is Topic)
+        {
+            return RedirectToRoute("TopicShow", new { id = rating.Target.Id });
+        }
+        else if (rating.Target is PrivateMessage)
+        {
+            return Redirect($"/messages/{rating.Target.Id}");
+        }
+
+        _context.Entry(rating.Target).Reference(p => ((Post) p).Discussion).Load();
+        return RedirectToRoute("DiscussionShow", new { id = ((Post) rating.Target).Discussion.Id });
     }
 
     private async Task<Rating> MakeRating(Rateable target, int value)

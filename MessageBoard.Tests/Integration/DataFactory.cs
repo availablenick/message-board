@@ -125,17 +125,30 @@ public class DataFactory
     }
 
     public static async Task<Rating> CreateRating(int value,
-        MessageBoardDbContext dbContext)
+        MessageBoardDbContext dbContext, string rateableType = "post")
     {
+        Rateable target = null;
+        switch (rateableType)
+        {
+            case "post":
+                target = await CreatePost(dbContext);
+                break;
+            case "topic":
+                target = await CreateTopic(dbContext);
+                break;
+            case "privateMessage":
+                target = await CreatePrivateMessage(dbContext);
+                break;
+        }
+
         var now = DateTime.Now;
-        var post = await CreatePost(dbContext);
         var rating = new Rating
         {
             Value = value,
             CreatedAt = now,
             UpdatedAt = now,
-            Owner = post.Author,
-            Target = post,
+            Owner = target.Author,
+            Target = target,
         };
 
         await dbContext.Ratings.AddAsync(rating);

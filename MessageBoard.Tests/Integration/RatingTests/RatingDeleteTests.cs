@@ -43,7 +43,6 @@ public class RatingDeleteTests : IClassFixture<CustomWebApplicationFactory<Progr
         _client.DefaultRequestHeaders.Add("X-XSRF-TOKEN", await Utilities.GetCSRFToken(_client));
         var response = await _client.DeleteAsync($"/ratings/{rating.Id}");
 
-        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
         using (var scope = _factory.Services.CreateScope())
         {
             var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
@@ -110,6 +109,57 @@ public class RatingDeleteTests : IClassFixture<CustomWebApplicationFactory<Progr
     }
 
     [Fact]
+    public async Task TopicRatingUpdateRedirectsToTopicPage()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
+        dbContext.Database.EnsureDeleted();
+        dbContext.Database.Migrate();
+        var rating = await DataFactory.CreateRating(1, dbContext, "topic");
+
+        _client.DefaultRequestHeaders.Add("UserId", rating.Owner.Id.ToString());
+        _client.DefaultRequestHeaders.Add("X-XSRF-TOKEN", await Utilities.GetCSRFToken(_client));
+        var response = await _client.DeleteAsync($"/ratings/{rating.Id}");
+
+        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+        Assert.Equal($"/topics/{rating.Target.Id}", response.Headers.Location.OriginalString);
+    }
+
+    [Fact]
+    public async Task PrivateMessageRatingUpdateRedirectsToPrivateMessagePage()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
+        dbContext.Database.EnsureDeleted();
+        dbContext.Database.Migrate();
+        var rating = await DataFactory.CreateRating(1, dbContext, "privateMessage");
+
+        _client.DefaultRequestHeaders.Add("UserId", rating.Owner.Id.ToString());
+        _client.DefaultRequestHeaders.Add("X-XSRF-TOKEN", await Utilities.GetCSRFToken(_client));
+        var response = await _client.DeleteAsync($"/ratings/{rating.Id}");
+
+        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+        Assert.Equal($"/messages/{rating.Target.Id}", response.Headers.Location.OriginalString);
+    }
+
+    [Fact]
+    public async Task PostRatingUpdateRedirectsToDiscussionPage()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
+        dbContext.Database.EnsureDeleted();
+        dbContext.Database.Migrate();
+        var rating = await DataFactory.CreateRating(1, dbContext);
+
+        _client.DefaultRequestHeaders.Add("UserId", rating.Owner.Id.ToString());
+        _client.DefaultRequestHeaders.Add("X-XSRF-TOKEN", await Utilities.GetCSRFToken(_client));
+        var response = await _client.DeleteAsync($"/ratings/{rating.Id}");
+
+        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+        Assert.Equal($"/discussions/{((Post) rating.Target).Discussion.Id}", response.Headers.Location.OriginalString);
+    }
+
+    [Fact]
     public async Task CSRFProtectionIsActive()
     {
         using var scope = _factory.Services.CreateScope();
@@ -146,7 +196,6 @@ public class RatingDeleteTests : IClassFixture<CustomWebApplicationFactory<Progr
 
         var response = await _client.PostAsync($"/ratings/{rating.Id}", content);
 
-        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
         using (var scope = _factory.Services.CreateScope())
         {
             var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
