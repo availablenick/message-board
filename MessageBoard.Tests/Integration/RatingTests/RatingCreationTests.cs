@@ -51,7 +51,7 @@ public class RatingCreationTests : IClassFixture<CustomWebApplicationFactory<Pro
         DateTime timeAfterResponse = DateTime.Now;
 
         Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
-        Assert.Equal($"/topics/{topic.Id}", response.Headers.Location.OriginalString);
+        Assert.Equal($"/rateables/{topic.Id}", response.Headers.Location.OriginalString);
         var ratingRecord = from r in dbContext.Ratings
                         where r.Value == ratingValue
                         select r;
@@ -91,7 +91,7 @@ public class RatingCreationTests : IClassFixture<CustomWebApplicationFactory<Pro
         DateTime timeAfterResponse = DateTime.Now;
 
         Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
-        Assert.Equal($"/messages/{message.Id}", response.Headers.Location.OriginalString);
+        Assert.Equal($"/rateables/{message.Id}", response.Headers.Location.OriginalString);
         var ratingRecord = from r in dbContext.Ratings
                         where r.Value == ratingValue
                         select r;
@@ -130,6 +130,8 @@ public class RatingCreationTests : IClassFixture<CustomWebApplicationFactory<Pro
         var response = await _client.PostAsync("/ratings", content);
         DateTime timeAfterResponse = DateTime.Now;
 
+        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+        Assert.Equal($"/rateables/{post.Id}", response.Headers.Location.OriginalString);
         var ratingRecord = from r in dbContext.Ratings
                         where r.Value == ratingValue
                         select r;
@@ -238,31 +240,6 @@ public class RatingCreationTests : IClassFixture<CustomWebApplicationFactory<Pro
 
         Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
         Assert.Equal(1, await dbContext.Ratings.CountAsync());
-    }
-
-    [Theory]
-    [InlineData(false)]
-    [InlineData(true)]
-    public async Task PostRatingCreationRedirectsToDiscussionPage(bool usePrivateMessage)
-    {
-        using var scope = _factory.Services.CreateScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
-        dbContext.Database.EnsureDeleted();
-        dbContext.Database.Migrate();
-        var post = await DataFactory.CreatePost(dbContext, usePrivateMessage);
-
-        _client.DefaultRequestHeaders.Add("UserId", post.Author.Id.ToString());
-        var content = new FormUrlEncodedContent(new Dictionary<string, string>
-        {
-            { "_token", await Utilities.GetCSRFToken(_client) },
-            { "value", "1" },
-            { "targetId", post.Id.ToString() },
-        });
-
-        var response = await _client.PostAsync("/ratings", content);
-
-        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
-        Assert.Equal($"/discussions/{post.Discussion.Id}", response.Headers.Location.OriginalString);
     }
 
     [Fact]

@@ -53,6 +53,8 @@ public class RatingUpdateTests : IClassFixture<CustomWebApplicationFactory<Progr
         var response = await _client.PutAsync($"/ratings/{newRating.Id}", content);
         DateTime timeAfterResponse = DateTime.Now;
 
+        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+        Assert.Equal($"/rateables/{newRating.Target.Id}", response.Headers.Location.OriginalString);
         using (var scope = _factory.Services.CreateScope())
         {
             var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
@@ -154,72 +156,6 @@ public class RatingUpdateTests : IClassFixture<CustomWebApplicationFactory<Progr
     }
 
     [Fact]
-    public async Task TopicRatingUpdateRedirectsToTopicPage()
-    {
-        using var scope = _factory.Services.CreateScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
-        dbContext.Database.EnsureDeleted();
-        dbContext.Database.Migrate();
-        var rating = await DataFactory.CreateRating(1, dbContext, "topic");
-
-        _client.DefaultRequestHeaders.Add("UserId", rating.Owner.Id.ToString());
-        var content = new FormUrlEncodedContent(new Dictionary<string, string>
-        {
-            { "_token", await Utilities.GetCSRFToken(_client) },
-            { "value", "-1" },
-        });
-
-        var response = await _client.PutAsync($"/ratings/{rating.Id}", content);
-
-        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
-        Assert.Equal($"/topics/{rating.Target.Id}", response.Headers.Location.OriginalString);
-    }
-
-    [Fact]
-    public async Task PrivateMessageRatingUpdateRedirectsToPrivateMessagePage()
-    {
-        using var scope = _factory.Services.CreateScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
-        dbContext.Database.EnsureDeleted();
-        dbContext.Database.Migrate();
-        var rating = await DataFactory.CreateRating(1, dbContext, "privateMessage");
-
-        _client.DefaultRequestHeaders.Add("UserId", rating.Owner.Id.ToString());
-        var content = new FormUrlEncodedContent(new Dictionary<string, string>
-        {
-            { "_token", await Utilities.GetCSRFToken(_client) },
-            { "value", "-1" },
-        });
-
-        var response = await _client.PutAsync($"/ratings/{rating.Id}", content);
-
-        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
-        Assert.Equal($"/messages/{rating.Target.Id}", response.Headers.Location.OriginalString);
-    }
-
-    [Fact]
-    public async Task PostRatingUpdateRedirectsToDiscussionPage()
-    {
-        using var scope = _factory.Services.CreateScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
-        dbContext.Database.EnsureDeleted();
-        dbContext.Database.Migrate();
-        var rating = await DataFactory.CreateRating(1, dbContext);
-
-        _client.DefaultRequestHeaders.Add("UserId", rating.Owner.Id.ToString());
-        var content = new FormUrlEncodedContent(new Dictionary<string, string>
-        {
-            { "_token", await Utilities.GetCSRFToken(_client) },
-            { "value", "-1" },
-        });
-
-        var response = await _client.PutAsync($"/ratings/{rating.Id}", content);
-
-        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
-        Assert.Equal($"/discussions/{((Post) rating.Target).Discussion.Id}", response.Headers.Location.OriginalString);
-    }
-
-    [Fact]
     public async Task CSRFProtectionIsActive()
     {
         using var scope = _factory.Services.CreateScope();
@@ -264,6 +200,8 @@ public class RatingUpdateTests : IClassFixture<CustomWebApplicationFactory<Progr
         var response = await _client.PostAsync($"/ratings/{newRating.Id}", content);
         DateTime timeAfterResponse = DateTime.Now;
 
+        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+        Assert.Equal($"/rateables/{newRating.Target.Id}", response.Headers.Location.OriginalString);
         using (var scope = _factory.Services.CreateScope())
         {
             var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();

@@ -47,18 +47,7 @@ public class RatingController : Controller
 
         await _context.Ratings.AddAsync(rating);
         await _context.SaveChangesAsync();
-
-        if (target is Topic)
-        {
-            return RedirectToRoute("TopicShow", new { id = targetId });
-        }
-        else if (target is PrivateMessage)
-        {
-            return Redirect($"/messages/{targetId}");
-        }
-
-        _context.Entry(target).Reference(p => ((Post) p).Discussion).Load();
-        return RedirectToRoute("DiscussionShow", new { id = ((Post) target).Discussion.Id });
+        return RedirectToRoute("RateableShow", new { id = targetId });
     }
 
     [HttpPut]
@@ -90,19 +79,8 @@ public class RatingController : Controller
 
         _context.Ratings.Update(rating);
         await _context.SaveChangesAsync();
-
         _context.Entry(rating).Reference(r => r.Target).Load();
-        if (rating.Target is Topic)
-        {
-            return RedirectToRoute("TopicShow", new { id = rating.Target.Id });
-        }
-        else if (rating.Target is PrivateMessage)
-        {
-            return Redirect($"/messages/{rating.Target.Id}");
-        }
-
-        _context.Entry(rating.Target).Reference(p => ((Post) p).Discussion).Load();
-        return RedirectToRoute("DiscussionShow", new { id = ((Post) rating.Target).Discussion.Id });
+        return RedirectToRoute("RateableShow", new { id = rating.Target.Id });
     }
 
     [HttpDelete]
@@ -124,18 +102,7 @@ public class RatingController : Controller
         _context.Entry(rating).Reference(r => r.Target).Load();
         _context.Ratings.Remove(rating);
         await _context.SaveChangesAsync();
-
-        if (rating.Target is Topic)
-        {
-            return RedirectToRoute("TopicShow", new { id = rating.Target.Id });
-        }
-        else if (rating.Target is PrivateMessage)
-        {
-            return Redirect($"/messages/{rating.Target.Id}");
-        }
-
-        _context.Entry(rating.Target).Reference(p => ((Post) p).Discussion).Load();
-        return RedirectToRoute("DiscussionShow", new { id = ((Post) rating.Target).Discussion.Id });
+        return RedirectToRoute("RateableShow", new { id = rating.Target.Id });
     }
 
     private async Task<Rating> MakeRating(Rateable target, int value)
