@@ -10,21 +10,6 @@ public class Ban
     public int UserId { get; set; }
     public User User { get; set; }
 
-    public bool IsValid()
-    {
-        if (String.IsNullOrEmpty(Reason))
-        {
-            return false;
-        }
-
-        if (ExpiresAt.CompareTo(DateTime.Now) < 0)
-        {
-            return false;
-        }
-
-        return true;
-    }
-
     public static bool ExpirationTimeIsValid(DateTime time)
     {
         if (time.CompareTo(DateTime.Now) < 0)
