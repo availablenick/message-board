@@ -53,7 +53,8 @@ public class BanUpdateTests : IClassFixture<CustomWebApplicationFactory<Program>
         var response = await _client.PutAsync($"/bans/{ban.Id}", content);
         DateTime timeAfterResponse = DateTime.Now;
 
-        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+        Assert.Equal("/users", response.Headers.Location.OriginalString);
         using (var scope = _factory.Services.CreateScope())
         {
             var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
@@ -86,7 +87,7 @@ public class BanUpdateTests : IClassFixture<CustomWebApplicationFactory<Program>
 
         var response = await _client.PutAsync($"/bans/{ban.Id}", content);
 
-        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var freshBan = await dbContext.Bans.FindAsync(ban.Id);
         Assert.NotEqual(expirationTime.ToString(), freshBan.ExpiresAt.ToString());
     }
@@ -111,7 +112,7 @@ public class BanUpdateTests : IClassFixture<CustomWebApplicationFactory<Program>
 
         var response = await _client.PutAsync($"/bans/{ban.Id}", content);
 
-        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var freshBan = await dbContext.Bans.FindAsync(ban.Id);
         Assert.NotEqual($"{ban.Reason}_edit", freshBan.Reason);
     }
@@ -216,7 +217,8 @@ public class BanUpdateTests : IClassFixture<CustomWebApplicationFactory<Program>
         var response = await _client.PostAsync($"/bans/{ban.Id}", content);
         DateTime timeAfterResponse = DateTime.Now;
 
-        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+        Assert.Equal("/users", response.Headers.Location.OriginalString);
         using (var scope = _factory.Services.CreateScope())
         {
             var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();

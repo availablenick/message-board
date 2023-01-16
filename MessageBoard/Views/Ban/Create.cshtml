@@ -1,0 +1,67 @@
+@section Title { Ban User }
+
+<div class="d-flex flex-column align-items-center justify-content-center">
+  <h1 class="fs-2">Ban User</h1>
+
+  <form class="w-50 p-4 mt-3" style="background: #15171a; box-shadow: 0 0 3px black"
+    asp-route="BanCreate" method="post"
+  >
+    <div class="mt-3">
+      <label>Username</label>
+      <input class="text-light form-control" style="background: #111"
+        type="text" name="username"
+      />
+
+      @if (ViewData.ModelState["Username"] != null &&
+        ViewData.ModelState["Username"].Errors.Any())
+      {
+        @foreach (var error in ViewData.ModelState["Username"].Errors)
+        {
+          <div class="bg-danger mt-2 p-1">
+            @error.ErrorMessage
+          </div>
+        }
+      }
+    </div>
+
+    <div class="mt-3">
+      <label>Reason</label>
+      <textarea class="text-light form-control" style="background: #111"
+        name="reason"
+      ></textarea>
+
+      @if (ViewData.ModelState["Reason"] != null &&
+        ViewData.ModelState["Reason"].Errors.Any())
+      {
+        @foreach (var error in ViewData.ModelState["Reason"].Errors)
+        {
+          <div class="bg-danger mt-2 p-1">
+            @error.ErrorMessage
+          </div>
+        }
+      }
+    </div>
+
+    <div class="mt-3">
+      <label>Expiration time</label>
+      <input class="text-light form-control" style="background: #111"
+        type="datetime-local" name="expiresAt"
+      />
+
+      @if (ViewData.ModelState["ExpiresAt"] != null &&
+        ViewData.ModelState["ExpiresAt"].Errors.Any())
+      {
+        @foreach (var error in ViewData.ModelState["ExpiresAt"].Errors)
+        {
+          <div class="bg-danger mt-2 p-1">
+            @error.ErrorMessage
+          </div>
+        }
+      }
+    </div>
+
+    <div class="mt-5">
+      <button class="btn btn-dark w-100">Ban</button>
+    </div>
+  </form>
+</div>

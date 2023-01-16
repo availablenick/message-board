@@ -51,7 +51,8 @@ public class BanCreationTests : IClassFixture<CustomWebApplicationFactory<Progra
         var response = await _client.PostAsync("/bans", content);
         DateTime timeAfterResponse = DateTime.Now;
 
-        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+        Assert.Equal("/users", response.Headers.Location.OriginalString);
         var ban = dbContext.Bans.FirstOrDefault(b => b.Reason == "test_reason");
         Assert.NotNull(ban);
         Assert.Equal(user.Id, ban.User.Id);
@@ -82,7 +83,7 @@ public class BanCreationTests : IClassFixture<CustomWebApplicationFactory<Progra
 
         var response = await _client.PostAsync("/bans", content);
 
-        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Equal(0, await dbContext.Bans.CountAsync());
     }
 
@@ -107,8 +108,75 @@ public class BanCreationTests : IClassFixture<CustomWebApplicationFactory<Progra
 
         var response = await _client.PostAsync("/bans", content);
 
-        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Equal(0, await dbContext.Bans.CountAsync());
+    }
+
+    [Fact]
+    public async Task BanCannotBeCreatedIfUserHasActiveBan()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
+        dbContext.Database.EnsureDeleted();
+        dbContext.Database.Migrate();
+        var user = await DataFactory.CreateUser(dbContext);
+        var ban = await DataFactory.CreateBan(dbContext, null, DateTime.Now.AddHours(3));
+
+        _client.DefaultRequestHeaders.Add("UserId", user.Id.ToString());
+        _client.DefaultRequestHeaders.Add("Role", "Moderator");
+        var content = new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            { "_token", await Utilities.GetCSRFToken(_client) },
+            { "reason", "test_reason" },
+            { "expiresAt", DateTime.Now.AddHours(2).ToString() },
+            { "username", ban.User.Username },
+        });
+
+        var response = await _client.PostAsync("/bans", content);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal(1, await dbContext.Bans.CountAsync());
+    }
+
+    [Fact]
+    public async Task BanCanBeCreatedIfUserHasExpiredBan()
+    {
+        User user;
+        Ban ban;
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
+            dbContext.Database.EnsureDeleted();
+            dbContext.Database.Migrate();
+            user = await DataFactory.CreateUser(dbContext);
+            ban = await DataFactory.CreateBan(dbContext, null, DateTime.Now.AddHours(-1));
+        }
+
+        _client.DefaultRequestHeaders.Add("UserId", user.Id.ToString());
+        _client.DefaultRequestHeaders.Add("Role", "Moderator");
+        var expirationTime = DateTime.Now.AddHours(2);
+        var content = new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            { "_token", await Utilities.GetCSRFToken(_client) },
+            { "reason", $"{ban.Reason}_2" },
+            { "expiresAt", expirationTime.ToString() },
+            { "username", ban.User.Username },
+        });
+
+        var response = await _client.PostAsync("/bans", content);
+
+        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+        Assert.Equal("/users", response.Headers.Location.OriginalString);
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
+            Assert.Equal(1, await dbContext.Bans.CountAsync());
+            var newBan = dbContext.Bans
+                .FirstOrDefault(b => b.Reason == $"{ban.Reason}_2");
+
+            Assert.NotNull(newBan);
+            Assert.Equal(expirationTime.ToString(), newBan.ExpiresAt.ToString());
+        }
     }
 
     [Fact]
@@ -132,7 +200,7 @@ public class BanCreationTests : IClassFixture<CustomWebApplicationFactory<Progra
 
         var response = await _client.PostAsync("/bans", content);
 
-        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Equal(0, await dbContext.Bans.CountAsync());
     }
 

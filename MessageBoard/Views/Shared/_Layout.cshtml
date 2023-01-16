@@ -17,6 +17,11 @@
         <div class="p-topbar">
           <div>
             <a asp-route="Home">Home</a>
+            <a class="ms-3" asp-route="UserIndex">Users</a>
+            @if (User.Identity.IsAuthenticated && User.IsInRole("Moderator"))
+            {
+              <a class="ms-3" asp-route="BanNew">Ban user</a>
+            }
           </div>
 
           @if(User.Identity.IsAuthenticated)

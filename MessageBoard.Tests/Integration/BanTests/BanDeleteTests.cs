@@ -41,7 +41,8 @@ public class BanDeleteTests : IClassFixture<CustomWebApplicationFactory<Program>
         _client.DefaultRequestHeaders.Add("X-XSRF-TOKEN", await Utilities.GetCSRFToken(_client));
         var response = await _client.DeleteAsync($"/bans/{ban.Id}");
 
-        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+        Assert.Equal("/users", response.Headers.Location.OriginalString);
         Assert.Null(dbContext.Bans.FirstOrDefault(b => b.Id == ban.Id));
     }
 
@@ -115,7 +116,8 @@ public class BanDeleteTests : IClassFixture<CustomWebApplicationFactory<Program>
 
         var response = await _client.PostAsync($"/bans/{ban.Id}", content);
 
-        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+        Assert.Equal("/users", response.Headers.Location.OriginalString);
         Assert.Null(dbContext.Bans.FirstOrDefault(b => b.Id == ban.Id));
     }
 }

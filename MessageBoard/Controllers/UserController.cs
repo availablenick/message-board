@@ -48,7 +48,8 @@ public class UserController : Controller
     [Route("", Name = "UserIndex")]
     public async Task<IActionResult> Index()
     {
-        var users = await _context.Users.Where(u => !u.IsDeleted).ToListAsync();
+        var users = await _context.Users.Where(u => !u.IsDeleted)
+            .Include(u => u.Ban).ToListAsync();
         return View("Index", users);
     }
 

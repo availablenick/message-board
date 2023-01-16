@@ -25,4 +25,9 @@ public class User
     {
         return Avatar ?? "images/default.jpg";
     }
+
+    public bool HasActiveBan()
+    {
+        return Ban != null && Ban.ExpiresAt.CompareTo(DateTime.Now) > 0;
+    }
 }

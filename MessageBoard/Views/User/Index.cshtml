@@ -7,11 +7,34 @@
     <div class="mt-5">
       @foreach (var user in Model)
       {
-        <div>
+        <div class="d-flex">
           <img style="height: auto; width: 100px" src='@($"/{user.GetAvatarPath()}")' />
-          <a class="ms-3" asp-route="UserShow" asp-route-id="@user.Id">
-            Username: @user.Username
-          </a>
+          <div class="ms-3">
+            <a asp-route="UserShow" asp-route-id="@user.Id">
+              Username: @user.Username
+            </a>
+
+            @if (user.HasActiveBan())
+            {
+              @if (User.IsInRole("Moderator"))
+              {
+                <div>Banned until @user.Ban.ExpiresAt.ToString()</div>
+                <div>
+                  <a asp-route="BanEdit" asp-route-id="@user.Ban.Id">
+                    Edit ban
+                  </a>
+                </div>
+                <form asp-route="BanDelete" asp-route-id="@user.Ban.Id" method="post">
+                  <input type="hidden" name="_method" value="DELETE" />
+                  <button class="btn btn-secondary">Unban</button>
+                </form>
+              }
+              else
+              {
+                <div>Banned</div>
+              }
+            }
+          </div>
         </div>
         <hr />
       }

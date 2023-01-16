@@ -24,4 +24,14 @@ public class Ban
 
         return true;
     }
+
+    public static bool ExpirationTimeIsValid(DateTime time)
+    {
+        if (time.CompareTo(DateTime.Now) < 0)
+        {
+            return false;
+        }
+
+        return true;
+    }
 }

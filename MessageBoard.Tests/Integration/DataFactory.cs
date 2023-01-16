@@ -177,14 +177,14 @@ public class DataFactory
     }
 
     public static async Task<Ban> CreateBan(MessageBoardDbContext dbContext,
-        User user = null)
+        User user = null, DateTime? expirationTime = null)
     {
         var now = DateTime.Now;
         var bannedUser = user ?? await CreateUser(dbContext);
         var ban = new Ban
         {
             Reason = _faker.Lorem.Sentence(),
-            ExpiresAt = now,
+            ExpiresAt = expirationTime ?? now,
             CreatedAt = now,
             UpdatedAt = now,
             User = bannedUser,
