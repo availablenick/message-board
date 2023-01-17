@@ -136,7 +136,7 @@
     </div>
   }
 
-  @if (User.Identity.IsAuthenticated)
+  @if (User.Identity.IsAuthenticated && Model.IsOpen)
   {
     <form class="d-flex flex-column align-items-center justify-content mt-5"
       asp-route="PostCreate" asp-route-discussionId="@Model.Id"
@@ -160,5 +160,12 @@
         }
       </div>
     </form>
+  }
+
+  @if (!Model.IsOpen)
+  {
+    <div class="mt-5 text-center">
+      This topic is closed and cannot receive any further replies
+    </div>
   }
 </div>
