@@ -99,7 +99,7 @@
         <div>@post.CreatedAt</div>
         <div>
           <partial name="_Rating" model="post" />
-          <span class="d-inline-block ms-3">#1</span>
+          <span class="d-inline-block ms-3">#@i</span>
         </div>
       </div>
 
@@ -139,7 +139,7 @@
   @if (User.Identity.IsAuthenticated && Model.IsOpen)
   {
     <form class="d-flex flex-column align-items-center justify-content mt-5"
-      asp-route="PostCreate" asp-route-discussionId="@Model.Id"
+      asp-route="TopicPostCreate" asp-route-topicId="@Model.Id"
     >
       <div>
         <textarea class="bg-dark text-light" rows="7" cols="50" style="resize: none"
