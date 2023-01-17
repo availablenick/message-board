@@ -1,0 +1,89 @@
+@model PrivateMessage
+
+@section Title { Create private message }
+
+<div class="d-flex flex-column align-items-center justify-content-center">
+  <h1 class="fs-2">Create private message</h1>
+
+  <form class="w-50 p-4 mt-3" style="background: #15171a; box-shadow: 0 0 3px black"
+    asp-route="PrivateMessageCreate" method="post"
+  >
+    <div>
+      <label>Title</label>
+      <input class="text-light form-control" style="background: #111"
+        name="title"
+      />
+
+      @if (ViewData.ModelState["Title"] != null &&
+        ViewData.ModelState["Title"].Errors.Any())
+      {
+        @foreach (var error in ViewData.ModelState["Title"].Errors)
+        {
+          <div class="bg-danger mt-2 p-1">
+            @error.ErrorMessage
+          </div>
+        }
+      }
+    </div>
+
+    <div class="mt-3">
+      <label>Content</label>
+      <textarea class="text-light form-control" style="background: #111"
+        name="content"
+      ></textarea>
+
+      @if (ViewData.ModelState["Content"] != null &&
+        ViewData.ModelState["Content"].Errors.Any())
+      {
+        @foreach (var error in ViewData.ModelState["Content"].Errors)
+        {
+          <div class="bg-danger mt-2 p-1">
+            @error.ErrorMessage
+          </div>
+        }
+      }
+    </div>
+
+    <div class="p-username-container mt-3">
+      <label>Username</label>
+      <input class="text-light form-control" style="background: #111"
+        name="usernames[0]"
+      />
+    </div>
+
+    @if (ViewData.ModelState["Usernames"] != null &&
+      ViewData.ModelState["Usernames"].Errors.Any())
+    {
+      @foreach (var error in ViewData.ModelState["Usernames"].Errors)
+      {
+        <div class="bg-danger mt-2 p-1">
+          @error.ErrorMessage
+        </div>
+      }
+    }
+
+    <div class="mt-5">
+      <button type="button" class="p-invite-button btn btn-secondary">Invite another user</button>
+    </div>
+
+
+    <div class="mt-2">
+      <button class="btn btn-dark w-100">Create</button>
+    </div>
+  </form>
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    let button = document.querySelector(".p-invite-button");
+    button.addEventListener("click", () => {
+      let usernameContainer = document.querySelector(".p-username-container");
+      let index = usernameContainer.childElementCount - 1;
+      let input = document.createElement("input");
+      input.className = "mt-2 text-light form-control";
+      input.style.background = "#111";
+      input.setAttribute("name", `usernames[${index}]`);
+      usernameContainer.appendChild(input);
+    })
+  });
+</script>

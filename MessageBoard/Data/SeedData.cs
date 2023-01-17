@@ -1,3 +1,5 @@
+using MessageBoard.Models;
+
 namespace MessageBoard.Data;
 
 public class SeedData
@@ -11,8 +13,29 @@ public class SeedData
                 ModelFactory.CreateUser(context);
             }
 
-            ModelFactory.CreateUser(context, "mod", "mod@mod.com", "Moderator");
-            ModelFactory.CreateUser(context, "ban", "ban@ban.com", null, true);
+            var bannedUser = ModelFactory.CreateUser(context, "ban", "ban@ban.com", null, true);
+            var mod = ModelFactory.CreateUser(context, "mod", "mod@mod.com", "Moderator");
+            var user = ModelFactory.CreateUser(context, "user", "user@user.com");
+            for (int i = 0; i < 5; ++i)
+            {
+                ModelFactory.CreatePrivateMessage(context, mod, new List<User>()
+                {
+                    mod,
+                    user,
+                });
+            }
+
+            ModelFactory.CreatePrivateMessage(context, user, new List<User>()
+            {
+                user,
+                mod,
+            });
+
+            ModelFactory.CreatePrivateMessage(context, user, new List<User>()
+            {
+                user,
+                bannedUser,
+            });
         }
 
         if (!context.Sections.Any())

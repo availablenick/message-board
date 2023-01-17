@@ -55,13 +55,17 @@ public class PrivateMessageCreationTests : IClassFixture<CustomWebApplicationFac
         var response = await _client.PostAsync("/messages", content);
         DateTime timeAfterResponse = DateTime.Now;
 
-        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
         using (var scope = _factory.Services.CreateScope())
         {
             var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
             var message = dbContext.PrivateMessages.Include(m => m.Users)
                 .FirstOrDefault(m => m.Title == "test_title" && m.Content == "test_content");
             Assert.NotNull(message);
+
+            Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+            Assert.Equal($"/messages/{message.Id}",
+                response.Headers.Location.OriginalString);
+
             Assert.True(message.CreatedAt.CompareTo(timeBeforeResponse) >= 0);
             Assert.True(message.CreatedAt.CompareTo(timeAfterResponse) <= 0);
             Assert.True(message.CreatedAt.CompareTo(message.UpdatedAt) == 0);
@@ -102,7 +106,7 @@ public class PrivateMessageCreationTests : IClassFixture<CustomWebApplicationFac
 
         var response = await _client.PostAsync("/messages", content);
 
-        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Equal(0, await dbContext.PrivateMessages.CountAsync());
     }
 
@@ -126,7 +130,7 @@ public class PrivateMessageCreationTests : IClassFixture<CustomWebApplicationFac
 
         var response = await _client.PostAsync("/messages", content);
 
-        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Equal(0, await dbContext.PrivateMessages.CountAsync());
     }
 
@@ -149,12 +153,12 @@ public class PrivateMessageCreationTests : IClassFixture<CustomWebApplicationFac
 
         var response = await _client.PostAsync("/messages", content);
 
-        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Equal(0, await dbContext.PrivateMessages.CountAsync());
     }
 
     [Fact]
-    public async Task PrivateMessageCannotBeCreatedWithoutNonExistentUsernames()
+    public async Task PrivateMessageCannotBeCreatedWithNonExistentUsernames()
     {
         using var scope = _factory.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
@@ -173,7 +177,7 @@ public class PrivateMessageCreationTests : IClassFixture<CustomWebApplicationFac
 
         var response = await _client.PostAsync("/messages", content);
 
-        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Equal(0, await dbContext.PrivateMessages.CountAsync());
     }
 

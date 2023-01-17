@@ -52,7 +52,8 @@ public class PrivateMessageUpdateTests : IClassFixture<CustomWebApplicationFacto
         var response = await _client.PutAsync($"/messages/{message.Id}", content);
         DateTime timeAfterResponse = DateTime.Now;
 
-        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+        Assert.Equal($"/messages/{message.Id}", response.Headers.Location.OriginalString);
         using (var scope = _factory.Services.CreateScope())
         {
             var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
@@ -84,7 +85,7 @@ public class PrivateMessageUpdateTests : IClassFixture<CustomWebApplicationFacto
 
         var response = await _client.PutAsync($"/messages/{message.Id}", content);
 
-        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Null(dbContext.PrivateMessages
             .FirstOrDefault(m => m.Content == $"{message.Content}_edit"));
     }
@@ -107,7 +108,7 @@ public class PrivateMessageUpdateTests : IClassFixture<CustomWebApplicationFacto
 
         var response = await _client.PutAsync($"/messages/{message.Id}", content);
 
-        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Null(dbContext.PrivateMessages
             .FirstOrDefault(m => m.Content == $"{message.Title}_edit"));
     }
@@ -231,7 +232,8 @@ public class PrivateMessageUpdateTests : IClassFixture<CustomWebApplicationFacto
         var response = await _client.PostAsync($"/messages/{message.Id}", content);
         DateTime timeAfterResponse = DateTime.Now;
 
-        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+        Assert.Equal($"/messages/{message.Id}", response.Headers.Location.OriginalString);
         using (var scope = _factory.Services.CreateScope())
         {
             var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();

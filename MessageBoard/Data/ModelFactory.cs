@@ -88,6 +88,33 @@ public class ModelFactory
         return topic;
     }
 
+    public static PrivateMessage CreatePrivateMessage(MessageBoardDbContext dbContext,
+        User author = null, List<User> participants = null)
+    {
+        var creator = author ?? CreateUser(dbContext);
+        var users = participants;
+        if (participants == null)
+        {
+            users = new List<User> { creator, CreateUser(dbContext) };
+        }
+
+        var now = DateTime.Now;
+        var message = new PrivateMessage
+        {
+            Title = _faker.Lorem.Sentence(),
+            Content = _faker.Lorem.Paragraph(),
+            CreatedAt = now,
+            UpdatedAt = now,
+            Author = creator,
+            Users = users,
+        };
+
+        dbContext.PrivateMessages.Add(message);
+        dbContext.SaveChanges();
+
+        return message;
+    }
+
     public static Post CreatePost(MessageBoardDbContext dbContext,
         Discussion discussion = null, User author = null)
     {

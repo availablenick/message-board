@@ -167,6 +167,29 @@ public class PostCreationTests : IClassFixture<CustomWebApplicationFactory<Progr
     }
 
     [Fact]
+    public async Task PostCannotBeCreatedInPrivateMessageByNonparticipant()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
+        dbContext.Database.EnsureDeleted();
+        dbContext.Database.Migrate();
+        var user = await DataFactory.CreateUser(dbContext);
+        var message = await DataFactory.CreatePrivateMessage(dbContext);
+
+        _client.DefaultRequestHeaders.Add("UserId", user.Id.ToString());
+        var content = new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            { "_token", await Utilities.GetCSRFToken(_client) },
+            { "content", "test_content" },
+        });
+
+        var response = await _client.PostAsync($"/discussions/{message.Id}/posts", content);
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        Assert.Equal(0, await dbContext.Posts.CountAsync());
+    }
+
+    [Fact]
     public async Task PostCannotBeCreatedByUnauthenticatedUser()
     {
         using var scope = _factory.Services.CreateScope();

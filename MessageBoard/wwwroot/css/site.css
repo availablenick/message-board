@@ -33,13 +33,13 @@ main > * {
   min-width: 25rem;
 }
 
-.p-topic-box {
+.p-discussion-box {
   align-items: center;
   background: #111;
   display: flex;
 }
 
-.p-topic-box:not(:last-child) {
+.p-discussion-box:not(:last-child) {
   border-bottom: 1px solid #777;
 }
 

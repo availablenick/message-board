@@ -6,15 +6,15 @@ public class PrivateMessage : Discussion
 
     public bool IsValid()
     {
-        if (String.IsNullOrEmpty(Title))
-        {
-            return false;
-        }
+        // if (String.IsNullOrEmpty(Title))
+        // {
+        //     return false;
+        // }
 
-        if (String.IsNullOrEmpty(Content))
-        {
-            return false;
-        }
+        // if (String.IsNullOrEmpty(Content))
+        // {
+        //     return false;
+        // }
 
         if (Users == null)
         {

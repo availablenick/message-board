@@ -27,7 +27,9 @@
           @if(User.Identity.IsAuthenticated)
           {
             <div>
-              <a asp-route="UserShow"
+              <a asp-route="PrivateMessageIndex">Messages</a>
+
+              <a class="ms-3" asp-route="UserShow"
                 asp-route-id="@User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier).Value"
               >
                 @User.Identity.Name</a>

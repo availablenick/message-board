@@ -34,6 +34,17 @@ public class PostController : Controller
             return NotFound();
         }
 
+        if (discussion is PrivateMessage)
+        {
+            var user = await UserHandler.GetAuthenticatedUser(User, _context);
+            _context.Entry(discussion)
+                .Collection(d => ((PrivateMessage) d).Users).Query().Load();
+            if (!((PrivateMessage) discussion).Users.Contains(user))
+            {
+                return Forbid();
+            }
+        }
+
         if (!discussion.CanBePostedOn())
         {
             return UnprocessableEntity();
@@ -41,19 +52,23 @@ public class PostController : Controller
 
         if (!ModelState.IsValid)
         {
+            _context.Entry(discussion).Reference(d => d.Author).Query()
+                .Include(u => u.Posts).Load();
+
+            _context.Entry(discussion).Collection(d => d.Posts).Query()
+                .Include(p => p.Ratings).Include(p => p.Author)
+                .ThenInclude(u => u.Posts).Load();
+
+            _context.Entry(discussion).Collection(d => d.Ratings).Query()
+                .Include(r => r.Owner).Load();
+
             if (discussion is Topic)
             {
-                _context.Entry(discussion).Reference(d => d.Author).Query()
-                    .Include(u => u.Posts).Load();
-
-                _context.Entry(discussion).Collection(d => d.Posts).Query()
-                    .Include(p => p.Ratings).Include(p => p.Author)
-                    .ThenInclude(u => u.Posts).Load();
-
-                _context.Entry(discussion).Collection(d => d.Ratings).Query()
-                    .Include(r => r.Owner).Load();
-
                 return View("/Views/Topic/Show.cshtml", discussion);
+            }
+            else if (discussion is PrivateMessage)
+            {
+                return View("/Views/PrivateMessage/Show.cshtml", discussion);
             }
         }
 
