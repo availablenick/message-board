@@ -121,4 +121,18 @@ public class SectionPageTests : IClassFixture<CustomWebApplicationFactory<Progra
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
+
+    [Fact]
+    public async Task NonExistentSectionPageCannotBeAccessed()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<MessageBoardDbContext>();
+        dbContext.Database.EnsureDeleted();
+        dbContext.Database.Migrate();
+
+        _client.DefaultRequestHeaders.Add("UserId", "1");
+        var response = await _client.GetAsync("/sections/1");
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
 }

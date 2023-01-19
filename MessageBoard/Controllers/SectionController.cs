@@ -42,6 +42,11 @@ public class SectionController : Controller
     public async Task<IActionResult> Show(int id)
     {
         var section = await _context.Sections.FindAsync(id);
+        if (section == null)
+        {
+            return NotFound();
+        }
+
         _context.Entry(section)
             .Collection(s => s.Topics)
             .Query()
