@@ -66,11 +66,9 @@ public class PrivateMessageController : Controller
         _context.Entry(message).Reference(m => m.Author).Query()
             .Include(u => u.Posts).Load();
 
-        _context.Entry(message).Reference(m => m.Author).Query()
-            .Include(u => u.Posts).Load();
-
         _context.Entry(message).Collection(m => m.Posts).Query()
-            .Include(p => p.Ratings).Include(p => p.Author).ThenInclude(u => u.Posts)
+            .Include(p => p.Ratings).ThenInclude(r => r.Owner)
+            .Include(p => p.Author).ThenInclude(u => u.Posts)
             .Load();
 
         _context.Entry(message).Collection(m => m.Ratings).Query()

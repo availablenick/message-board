@@ -5,126 +5,17 @@
 
 <div class="p-5">
   <h1>@Model.Title</h1>
-  <div class="p-post-box mt-5">
-    <div class="p-user-info p-2">
-      <div class="d-flex justify-content-center">
-        <img style="width: 125px; height: 125px"
-          src='@($"/{Model.Author.GetAvatarPath()}")'
-        />
-      </div>
-      <div class="mt-2 text-center" style="font-size: 0.8rem">
-        @Model.Author.Username
-      </div>
-
-      <div class="mt-2 text-center" style="font-size: 0.8rem">
-        Joined: @Model.Author.CreatedAt.ToShortDateString()
-      </div>
-
-      <div class="mt-2 text-center" style="font-size: 0.8rem">
-        Posts: @Model.Author.Posts.Count
-      </div>
-    </div>
-
-    <div class="d-flex flex-column flex-grow-1">
-      <div class="d-flex justify-content-between p-2"
-        style="border-bottom: 1px solid #777; font-size: 0.9rem"
-      >
-        <div>@Model.CreatedAt</div>
-        <div>
-          <partial name="_Rating" model="Model" />
-          <span class="d-inline-block ms-3">#1</span>
-        </div>
-      </div>
-
-      <div class="p-2 flex-grow-1">
-        @Model.Content
-      </div>
-
-      @if (User.Identity.IsAuthenticated)
-      {
-        <div class="p-2 text-end">
-          <a class="me-2" asp-route="ComplaintNew" asp-route-targetId="@Model.Id">
-            Report</a>
-          @if (ResourceHandler.IsAuthorized(User, Model.Author.Id) ||
-            User.IsInRole("Moderator"))
-          {
-              <a class="text-decoration-none" asp-route="PrivateMessageEdit"
-                asp-route-id="@Model.Id"
-              >
-                <i class="fa-solid fa-pen-to-square"></i>
-              </a>
-          }
-        </div>
-      }
-    </div>
-  </div>
+  <partial name="_PostBox" model="Model"
+    view-data='new ViewDataDictionary(ViewData) { { "index", 1 } }'
+  />
 
   @for (int i = 2; i-2 < Model.Posts.Count; i++)
   {
     var post = Model.Posts[i-2];
 
-    <div class="p-post-box mt-5">
-      <div class="p-user-info p-2">
-        <div class="d-flex justify-content-center">
-          <img style="width: 125px; height: 125px"
-            src='@($"/{Model.Author.GetAvatarPath()}")'
-          />
-        </div>
-        <div class="mt-2 text-center" style="font-size: 0.8rem">
-          @post.Author.Username
-        </div>
-
-        <div class="mt-2 text-center" style="font-size: 0.8rem">
-          Joined: @post.Author.CreatedAt.ToShortDateString()
-        </div>
-
-        <div class="mt-2 text-center" style="font-size: 0.8rem">
-          Posts: @post.Author.Posts.Count
-        </div>
-      </div>
-
-      <div class="d-flex flex-column flex-grow-1">
-      <div class="d-flex justify-content-between p-2"
-        style="border-bottom: 1px solid #777; font-size: 0.9rem"
-      >
-        <div>@post.CreatedAt</div>
-        <div>
-          <partial name="_Rating" model="post" />
-          <span class="d-inline-block ms-3">#@i</span>
-        </div>
-      </div>
-
-      <div class="p-2 flex-grow-1">
-        @post.Content
-      </div>
-
-      @if (User.Identity.IsAuthenticated)
-      {
-        <div class="p-2 text-end">
-          <a class="me-2" asp-route="ComplaintNew" asp-route-targetId="@post.Id">
-            Report</a>
-          @if (ResourceHandler.IsAuthorized(User, post.Author.Id) ||
-            User.IsInRole("Moderator"))
-          {
-              <a class="text-decoration-none" asp-route="PostEdit"
-                asp-route-id="@post.Id"
-              >
-                <i class="fa-solid fa-pen-to-square"></i>
-              </a>
-
-              <form class="d-inline-block" asp-route="PostDelete"
-                asp-route-id="@post.Id"
-              >
-                <input type="hidden" name="_method" value="DELETE" />
-                <button class="btn btn-secondary px-1 py-0">
-                  <i class="fa-solid fa-trash"></i>
-                </button>
-              </form>
-          }
-        </div>
-      }
-    </div>
-    </div>
+    <partial name="_PostBox" model="post"
+      view-data='new ViewDataDictionary(ViewData) { { "index", i } }'
+    />
   }
 
   @if (User.Identity.IsAuthenticated)
