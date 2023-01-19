@@ -40,6 +40,7 @@ public class SeedData
 
         if (!context.Sections.Any())
         {
+            var deletedUser = ModelFactory.CreateUser(context, "deletedUser", "deleted@deleted.com", null, false, true);
             for (int i = 0; i < 5; ++i)
             {
                 var section = ModelFactory.CreateSection(context);
@@ -50,8 +51,11 @@ public class SeedData
                     {
                         ModelFactory.CreatePost(context, topic);
                     }
+
+                    ModelFactory.CreatePost(context, topic, deletedUser);
                 }
 
+                ModelFactory.CreateTopic(context, false, true, section, deletedUser);
                 ModelFactory.CreateTopic(context, true, true, section);
                 ModelFactory.CreateTopic(context, true, false, section);
                 ModelFactory.CreateTopic(context, false, false, section);

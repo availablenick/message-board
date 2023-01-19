@@ -11,7 +11,7 @@ public class ModelFactory
 
     public static User CreateUser(MessageBoardDbContext dbContext,
         string username = null, string email = null, string role = null,
-        bool isBanned = false)
+        bool isBanned = false, bool isDeleted = false)
     {
         var now = DateTime.Now;
         var user = new User
@@ -19,6 +19,7 @@ public class ModelFactory
             Username = username ?? _faker.Internet.UserName(),
             Email = email ?? _faker.Internet.Email(),
             Role = role,
+            IsDeleted = isDeleted,
             CreatedAt = now,
             UpdatedAt = now,
         };

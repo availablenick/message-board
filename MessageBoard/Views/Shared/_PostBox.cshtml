@@ -9,7 +9,7 @@
       />
     </div>
     <div class="mt-2 text-center" style="font-size: 0.8rem">
-      @Model.Author.Username
+      @(Model.Author.IsDeleted ? "deleted-user" : Model.Author.Username)
     </div>
 
     <div class="mt-2 text-center" style="font-size: 0.8rem">
